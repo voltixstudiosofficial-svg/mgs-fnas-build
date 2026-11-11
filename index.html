@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>(function(){var away=false;try{away=window.top!==window.self&&window.top.location.host!==location.host}catch(e){var r=document.referrer;away=r&&!/googleusercontent\.com|sites\.google\.com|script\.google\.com/.test(r)}if(!away)return;if(window.stop)window.stop();document.documentElement.innerHTML='<head><meta charset="utf-8"><title>Midnight Grid Studios</title></head><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0b0b;color:#fff;font:600 18px/1.5 system-ui,sans-serif;text-align:center;padding:20px"><p>This can only be played on Midnight Grid Studios.<br><a style="color:#fc8708" target="_top" href="'+location.origin+'/">Go there to play</a></p></body>'})();</script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'self'; form-action 'none'">
+<script defer src="/_vercel/insights/script.js"></script>
+<title>Five Nights at Seth's</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+/* One full-frame stage: the game's picture, and over it (until the game is ready) a plain loading screen. A single dark look, as the game is. */
+:root { color-scheme: dark; --void: #040506; --ash: #b9b4a8; --bone: #e9e4d6; --dust: #6f6a60; --green: #3fe081; --ember: #d8452f; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; overscroll-behavior: none; font: 15px/1.5 "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif; -webkit-text-size-adjust: 100%; }
+#stage { position: relative; width: 100%; height: 100%; min-height: 240px; background: var(--void); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+#unity-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; background: var(--void); }
+#wait { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px 16px; text-align: center; background: var(--void); transition: opacity .6s; }
+#wait.gone { opacity: 0; pointer-events: none; }
+#bar { width: min(260px, 64%); height: 4px; border-radius: 4px; background: rgba(233, 228, 214, .1); overflow: hidden; }
+#bar i { display: block; height: 100%; width: 0%; border-radius: 4px; background: linear-gradient(90deg, #62f2a6, var(--green)); transition: width .25s; }
+#say { min-height: 1.5em; letter-spacing: .3em; padding-left: .3em; font-size: 12px; color: var(--dust); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+#say.bad { color: var(--ember); letter-spacing: .06em; padding-left: 0; text-transform: none; max-width: 520px; font-size: 14px; }
+#again { display: none; margin-top: 4px; padding: 10px 26px; font: inherit; letter-spacing: .3em; color: var(--bone); background: rgba(63, 224, 129, .06); border: 1px solid rgba(63, 224, 129, .4); border-radius: 10px; cursor: pointer; }
+#again:hover { border-color: var(--green); }
+[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <div id="wait">
+    <div id="bar"><i></i></div>
+    <div id="say">Loading</div>
+    <button id="again" type="button">TRY AGAIN</button>
+  </div>
+</div>
+<script src="g/studio.js"></script>
+<script>
+// The game's files are too big to be kept whole here, so they are kept in pieces. This fetches the pieces, puts them together,
+// unpacks them, and hands them to the game's own loader as if they had come from a web address.
+(function () {
+  var M = {"product":"Five Nights at Seth's","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":35874908,"parts":[11732183]},{"name":"data","id":"d","type":"application/octet-stream","size":118617669,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,11775579],"kind":"desktop"},{"name":"data","id":"m","type":"application/octet-stream","size":130353366,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,6941201],"kind":"mobile"}],"x":829560271,"b":829560271};
+  var canvas = document.getElementById('unity-canvas'), wait = document.getElementById('wait'), bar = document.querySelector('#bar i'), say = document.getElementById('say'), again = document.getElementById('again');
+  function fail(msg) { say.className = 'bad'; say.textContent = msg; bar.parentNode.style.display = 'none'; again.style.display = 'inline-block'; }
+  again.addEventListener('click', function () { location.reload(); });
+  // first of all, the studio's sign (it plays while the game downloads underneath)
+  if (window.fnasStudio) window.fnasStudio('g/', document.getElementById('stage'));
+  ['gesturestart', 'gesturechange', 'gestureend', 'contextmenu'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
+  canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  if (!M) { fail('The game has not been put here yet.'); return; }
+  var probe = document.createElement('canvas'), gl = null; try { gl = probe.getContext('webgl2'); } catch (e) { }
+  if (!gl) { fail('This browser cannot draw the game here (it needs WebGL 2). Try it in a newer browser, or on another device.'); return; }
+  if (typeof DecompressionStream === 'undefined' || typeof WebAssembly === 'undefined') { fail('This browser is too old to run the game. Try a newer one.'); return; }
+
+  // (a phone or tablet cannot draw the pictures packed for computers: when there is a version packed for it, that one is fetched instead)
+  var kind = window.__fnasKind === 'mobile' || window.__fnasKind === 'desktop' ? window.__fnasKind : (gl.getExtension('WEBGL_compressed_texture_s3tc') || !gl.getExtension('WEBGL_compressed_texture_astc')) ? 'desktop' : 'mobile';      // (__fnasKind: set only by the page's own tests)
+  // (every build's pieces share the same names but hold new contents; a tag that changes with each build is added to every address, so a browser that kept an older build's files never serves those in place of these)
+  var ver = typeof M.b === 'number' ? M.b : (typeof M.x === 'number' ? (M.x >>> 0) : (M.version || '1')), VQ = '?v=' + ver;
+  var sets = M.sets.filter(function (s) { return !s.kind || s.kind === kind; }), frameworkUrl = (M.frameworks && M.frameworks[kind] ? M.frameworks[kind] : 'g/framework.js') + VQ;
+  var got = 0, total = 0; sets.forEach(function (s) { s.parts.forEach(function (n) { total += n; }); });
+  // (while the studio sign is still playing it covers this screen, so the bar is barely touched then: every spare moment goes to the sign, to keep it perfectly smooth)
+  var lastPaint = 0;
+  function show(force) {
+    if (!force) { if (window.fnasIntro === 0) return; if (performance.now() - lastPaint < 90) return; }
+    lastPaint = performance.now(); var p = total ? got / total : 0;
+    bar.style.width = Math.round(Math.max(0.02, p * 0.9) * 100) + '%'; say.textContent = 'Loading ' + Math.round(got / 1048576) + ' of ' + Math.round(total / 1048576) + ' MB';
+  }
+  // (waits until the studio sign has lifted — or a tap has sent it away, or it has had its full time — so the heavy start-up never fights the sign)
+  function afterIntro() { return new Promise(function (ok) { if (window.fnasIntro !== 0) return ok(); var t = setInterval(function () { if (window.fnasIntro !== 0) { clearInterval(t); ok(); } }, 50); setTimeout(function () { clearInterval(t); ok(); }, 10000); }); }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  // one piece (tried again a few times if the line drops)
+  async function piece(url) {
+    for (var attempt = 0; ; attempt++) {
+      var mine = 0;
+      try {
+        var r = await fetch(url, { cache: 'force-cache' }); if (!r.ok) throw new Error('could not fetch ' + url + ' (' + r.status + ')');
+        if (!r.body || !r.body.getReader) { var all = await r.arrayBuffer(); mine = all.byteLength; got += mine; show(); return new Blob([all]); }
+        var reader = r.body.getReader(), chunks = [];
+        for (;;) { var step = await reader.read(); if (step.done) break; chunks.push(step.value); mine += step.value.length; got += step.value.length; show(); }
+        return new Blob(chunks);
+      } catch (e) { got -= mine; show(); if (attempt >= 3) throw e; await sleep(600 * (attempt + 1)); }
+    }
+  }
+  // (a piece comes dressed as a small WebAssembly file, the kind of file that is handed out here: its wrapping is taken off)
+  async function bare(blob, size, s) {
+    var h = new Uint8Array(await blob.slice(0, 24).arrayBuffer()), i = 9; if (h[0] !== 0 || h[1] !== 97 || h[2] !== 115 || h[3] !== 109 || h[8] !== 0) throw new Error('a piece arrived changed');
+    while (h[i] & 0x80) i++; i++; i += 1 + h[i];
+    if (blob.size - i !== size) throw new Error('a piece did not arrive whole (' + (blob.size - i) + ' of ' + size + ')');
+    if (s === undefined) return blob.slice(i);
+    // (what is in it was scrambled when it was packed: each 4 bytes are turned back with the same numbers)
+    var buf = await blob.slice(i).arrayBuffer(), n = buf.byteLength >> 2, w = new Uint32Array(buf, 0, n), k, x;
+    for (k = 0; k <= n; k++) {
+      x = (Math.imul(k, 0x9E3779B1) + s) | 0; x ^= x >>> 15; x = Math.imul(x, 0x85EBCA77); x ^= x >>> 13; x = Math.imul(x, 0xC2B2AE3D); x ^= x >>> 16;
+      if (k < n) w[k] ^= x; else { var b = new Uint8Array(buf, n * 4); for (var j = 0; j < b.length; j++) b[j] ^= (x >>> (8 * j)) & 255; }
+    }
+    return new Blob([buf]);
+  }
+  function seedOf(id, i) { return (M.x ^ Math.imul(id.charCodeAt(0), 0x01000193) ^ Math.imul(i + 1, 0x27D4EB2F)) | 0; }
+  // a whole file: its pieces (three at a time), joined and unpacked
+  async function whole(set) {
+    var blobs = new Array(set.parts.length), next = 0;
+    async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece('g/' + set.id + i + '.wasm' + VQ), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
+    await Promise.all([worker(), worker(), worker()]);
+    var unpacked = await new Response(new Blob(blobs).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+    if (unpacked.size !== set.size) throw new Error('a file did not arrive whole (' + set.id + ': ' + unpacked.size + ' of ' + set.size + ')');
+    return new Blob([unpacked], { type: set.type });
+  }
+
+  (async function () {
+    show();
+    var files = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
+    show(true);
+    // the files are here; let the studio sign finish before the heavy start-up (compiling the game, opening the graphics), so the sign stays smooth to the very end
+    await afterIntro();
+    say.textContent = 'Starting'; bar.style.width = '92%';
+    var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: 'StreamingAssets', companyName: M.company || 'DefaultCompany', productName: M.product, productVersion: M.version || '1.0',
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 3), matchWebGLToCanvasSize: true,
+      showBanner: function (msg, type) { if (type === 'error') fail(msg); else if (window.console) console.warn(msg); } };
+    if (M.mode === 'blob') { config.dataUrl = URL.createObjectURL(files.data); config.codeUrl = URL.createObjectURL(files.code); }
+    else {
+      // the loader asks for two made-up addresses; what it gets is what has just been put together
+      var real = window.fetch.bind(window), names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
+      window.fetch = function (input, init) {
+        var u = typeof input === 'string' ? input : input && input.url ? input.url : String(input);
+        for (var k in names) if (u.length >= k.length && u.substr(u.length - k.length) === k) return Promise.resolve(new Response(names[k], { status: 200, headers: { 'Content-Type': names[k].type, 'Content-Length': String(names[k].size) } }));
+        return real(input, init);
+      };
+      config.dataUrl = 'g/whole.data'; config.codeUrl = 'g/whole.wasm';
+    }
+    await new Promise(function (ok, bad) { var s = document.createElement('script'); s.src = 'g/loader.js' + VQ; s.onload = ok; s.onerror = function () { bad(new Error('the loader did not arrive')); }; document.body.appendChild(s); });
+    var instance = await createUnityInstance(canvas, config, function (p) { bar.style.width = Math.round((0.92 + 0.08 * p) * 100) + '%'; });
+    window.unityInstance = instance; wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; }, 700); try { canvas.focus(); } catch (e) { }
+  })().catch(function (err) { fail('The game could not start here: ' + (err && err.message ? err.message : err)); if (window.console) console.error(err); });
+})();
+</script>
+
+</body>
+</html>

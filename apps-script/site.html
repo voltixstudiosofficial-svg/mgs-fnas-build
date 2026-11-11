@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Midnight Grid Studios</title>
+<meta name="description" content="Free games you can play right in your browser.">
+<link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/favicon.png"><link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/apple-touch-icon.png"><meta name="theme-color" content="#0b0b0b"><link rel="preload" href="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/fonts/lilita-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin><style>@font-face{font-family:"Lilita One";src:url(https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/fonts/lilita-one-latin-400-normal.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}@font-face{font-family:"Inter";src:url(https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/fonts/inter-latin-400-normal.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}@font-face{font-family:"Inter";src:url(https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/fonts/inter-latin-500-normal.woff2) format("woff2");font-weight:500;font-style:normal;font-display:swap}@font-face{font-family:"Inter";src:url(https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/fonts/inter-latin-600-normal.woff2) format("woff2");font-weight:600;font-style:normal;font-display:swap}</style>
+<style>
+  /* Black, white and one orange. Chunky cartoon lettering for names, titles and buttons; plain Inter for everything you read.
+     Full-width bands (header, sections, footer), each with a centred column inside. */
+  :root {
+    --bg: #0b0b0b; --panel: #131313; --panel-2: #191919; --line: #232323; --line-2: #313131;
+    --text: #ffffff; --soft: #c8c8c8; --muted: #9c9c9c; --dim: #727272; --ghost: #1b1b1b;
+    --orange: #fc8708; --orange-hi: #ff9f33; --orange-glow: rgba(252, 135, 8, .38); --on-orange: #0b0b0b;
+    --display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --radius: 22px; --max: 1180px; --ease: cubic-bezier(.2, .75, .25, 1); --spring: cubic-bezier(.34, 1.56, .64, 1);
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--bg); scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; display: block; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.05; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 10px; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+
+  /* --- header --- */
+  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: rgba(11, 11, 11, .82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); transition: box-shadow .3s; }
+  .top.scrolled { box-shadow: 0 10px 30px rgba(0, 0, 0, .55); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+  .badge { display: inline-flex; background: #000; border-radius: 12px; padding: 9px 13px; text-decoration: none; transition: transform .35s var(--spring); }
+  .badge img { height: 40px; width: auto; }
+  .badge:hover { transform: rotate(-3deg) scale(1.05); }
+  .nav { display: flex; gap: clamp(16px, 4vw, 46px); }
+  .nav a { position: relative; font-family: var(--display); font-size: clamp(17px, 2.2vw, 22px); letter-spacing: .04em; color: var(--soft); text-decoration: none; padding-block: 6px; transition: color .2s; }
+  .nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px; background: var(--orange); transform: scaleX(0); transition: transform .3s var(--spring); }
+  .nav a:hover { color: var(--text); }
+  .nav a:hover::after, .nav a.active::after { transform: scaleX(1); }
+  .nav a.active { color: var(--orange); }
+
+  /* --- pages (one shows at a time) --- */
+  .page.enter { animation: pageIn .5s var(--ease) both; }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .band { padding-block: clamp(56px, 8vw, 100px); }
+  .band + .band { border-top: 1px solid var(--line); }
+  .head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: clamp(26px, 4vw, 40px); }
+  .head h1, .head h2 { font-size: clamp(42px, 6.5vw, 68px); }
+  .lead { color: var(--soft); font-size: clamp(17px, 2vw, 20px); max-width: 60ch; margin-top: 14px; }
+  .eyebrow { display: block; font-family: var(--display); color: var(--orange); font-size: clamp(14px, 1.6vw, 18px); letter-spacing: .38em; margin-bottom: 14px; }
+  .more { font-family: var(--display); font-size: 19px; letter-spacing: .04em; color: var(--soft); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: color .2s; }
+  .more svg { width: 20px; height: 20px; transition: transform .3s var(--spring); }
+  .more:hover { color: var(--orange); }
+  .more:hover svg { transform: translateX(5px); }
+
+  /* --- buttons --- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--display); font-size: clamp(19px, 2vw, 23px); letter-spacing: .05em; line-height: 1; color: var(--on-orange); background: var(--orange); border: 0; border-radius: 999px; padding: 18px 36px; cursor: pointer; text-decoration: none; box-shadow: 0 0 0 0 var(--orange-glow); transition: transform .3s var(--spring), box-shadow .3s, background .2s; -webkit-tap-highlight-color: transparent; }
+  .btn svg { width: 22px; height: 22px; transition: transform .3s var(--spring); }
+  .btn:hover { transform: translateY(-3px) scale(1.04); background: var(--orange-hi); box-shadow: 0 12px 30px -6px var(--orange-glow); }
+  .btn:hover svg.arrow { transform: translateX(5px); }
+  .btn:active { transform: scale(.96); transition-duration: .08s; }
+  .btn-block { width: 100%; }
+  .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line-2); padding: 12px 22px; font-size: 18px; }
+  .btn-ghost:hover { background: transparent; color: var(--orange); border-color: var(--orange); box-shadow: none; }
+
+  /* --- home: the sign --- */
+  .hero { text-align: center; padding-block: clamp(48px, 9vw, 110px) clamp(56px, 8vw, 100px); }
+  .sign { position: relative; display: inline-block; width: min(700px, 92%); }
+  .sign img { width: 100%; height: auto; animation: signIn .9s var(--spring) both; }
+  @keyframes signIn { from { opacity: 0; transform: scale(.82) translateY(10px); } to { opacity: 1; transform: none; } }
+  .twinkle { position: absolute; left: 95.79%; top: 18.87%; width: 7%; aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; }
+  .twinkle svg { width: 100%; height: 100%; display: block; opacity: 0; animation: twinkle 5s ease-in-out 1.2s infinite; }
+  @keyframes twinkle { 0%, 72%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); } 80% { opacity: 1; transform: scale(1.1) rotate(45deg); } 88% { opacity: .55; transform: scale(.75) rotate(70deg); } }
+  .by { font-family: var(--display); font-size: clamp(16px, 2.2vw, 22px); letter-spacing: .04em; color: var(--orange); margin-top: clamp(6px, 1.2vw, 12px); animation: rise .6s var(--ease) .25s both; }
+  .tagline { color: var(--soft); font-size: clamp(19px, 2.5vw, 27px); margin: clamp(16px, 2.4vw, 26px) auto clamp(26px, 3.5vw, 38px); animation: rise .6s var(--ease) .35s both; }
+  .hero .btn { animation: rise .6s var(--ease) .5s both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  /* --- game cards --- */
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 28px); }
+  .cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: transform .35s var(--spring), border-color .3s, box-shadow .3s; }
+  .card.game { display: flex; flex-direction: column; }
+  .card.game:hover { transform: translateY(-7px) rotate(-.4deg); border-color: rgba(252, 135, 8, .65); box-shadow: 0 22px 40px -18px var(--orange-glow); }
+  .cover { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; background: #000; }
+  .cover img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease); }
+  .card.game:hover .cover img { transform: scale(1.06); }
+  .tag { position: absolute; top: 18px; left: 22px; font-family: var(--display); color: var(--orange); font-size: 17px; letter-spacing: .14em; text-shadow: 0 2px 8px rgba(0, 0, 0, .9); }
+  .card .body { display: flex; flex-direction: column; gap: 14px; padding: 26px 28px 28px; flex: 1; }
+  .card h3 { font-size: clamp(25px, 2.6vw, 31px); }
+  .card .body p { color: var(--soft); flex: 1; }
+  .card.soon { display: grid; place-items: center; text-align: center; min-height: 360px; padding: 40px 28px; }
+  .card.soon:hover { border-color: var(--line-2); }
+  .card.soon .q { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 260px; line-height: 1; color: var(--ghost); user-select: none; transition: transform .6s var(--spring); }
+  .card.soon:hover .q { transform: scale(1.08) rotate(6deg); }
+  .card.soon .inner { position: relative; display: grid; justify-items: center; gap: 12px; }
+  .card.soon svg { width: 46px; height: 46px; color: var(--muted); }
+  .card.soon:hover svg { animation: wiggle .55s ease; }
+  .card.soon h3 { color: #a9a9a9; font-size: clamp(28px, 3vw, 36px); }
+  .card.soon p { color: var(--dim); max-width: 30ch; }
+  @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 50% { transform: rotate(9deg); } 75% { transform: rotate(-5deg); } }
+
+  /* --- why play here --- */
+  .why-title { font-size: clamp(36px, 5.5vw, 62px); margin-bottom: clamp(26px, 4vw, 40px); }
+  .why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 28px); }
+  .feature { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 34px 32px 36px; transition: transform .35s var(--spring), border-color .3s; }
+  .feature:hover { transform: translateY(-5px); border-color: rgba(252, 135, 8, .65); }
+  .feature svg { width: 42px; height: 42px; color: var(--orange); }
+  .feature:hover svg { animation: hop .6s var(--spring); }
+  .feature h3 { font-size: clamp(24px, 2.4vw, 28px); margin: 22px 0 12px; }
+  .feature p { color: var(--soft); }
+  @keyframes hop { 0%, 100% { transform: none; } 40% { transform: translateY(-8px) rotate(-8deg); } }
+
+  /* (things further down the page slide up as they come into view; nothing is hidden until the script has checked it is below the fold) */
+  .pre { opacity: 0; transform: translateY(26px); }
+  .in { opacity: 1; transform: none; transition: opacity .6s var(--ease), transform .7s var(--spring); }
+
+  /* --- about --- */
+  .about-copy { display: grid; gap: 18px; max-width: 64ch; }
+  .about-copy p { color: var(--soft); font-size: clamp(18px, 2vw, 21px); }
+
+  /* --- a game's own page --- */
+  .crumb { display: inline-flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 18px; letter-spacing: .05em; color: var(--soft); text-decoration: none; margin-bottom: 26px; transition: color .2s; }
+  .crumb svg { width: 20px; height: 20px; transition: transform .3s var(--spring); }
+  .crumb:hover { color: var(--orange); }
+  .crumb:hover svg { transform: translateX(-5px); }
+  .game-title { font-size: clamp(40px, 6.5vw, 68px); margin-bottom: clamp(20px, 3vw, 30px); animation: rise .6s var(--ease) both; }
+  .event { display: flex; align-items: center; gap: 16px; border: 1px solid rgba(252, 135, 8, .55); background: linear-gradient(90deg, rgba(252, 135, 8, .16), rgba(252, 135, 8, .03)); border-radius: 18px; padding: 12px 20px; margin-bottom: 22px; }
+  .event img { width: 52px; height: auto; flex: none; animation: bob 2.6s ease-in-out infinite; }
+  .event div { min-width: 0; }
+  .event strong { display: block; font-family: var(--display); font-weight: 400; color: var(--orange); font-size: 22px; letter-spacing: .06em; line-height: 1.2; }
+  .event span { color: var(--soft); font-size: 16px; }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-5px) rotate(4deg); } }
+  .player { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #000; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .player > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.5) saturate(.9); transform: scale(1.02); transition: transform 1.2s var(--ease), filter .6s; }
+  .player:hover > img { transform: scale(1.06); filter: brightness(.6) saturate(1); }
+  .player .ui { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 16px; padding: 20px; text-align: center; }
+  .player .ui p { color: var(--soft); font-size: 15px; max-width: 42ch; text-shadow: 0 2px 10px #000; }
+  .btn-play { font-size: clamp(22px, 3vw, 30px); padding: 20px 46px; animation: pulse 2.4s ease-out infinite; }
+  .btn-play svg { width: 26px; height: 26px; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--orange-glow); } 70%, 100% { box-shadow: 0 0 0 22px rgba(252, 135, 8, 0); } }
+  .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: #000; }
+  .player:fullscreen { border-radius: 0; border: 0; aspect-ratio: auto; width: 100%; height: 100%; }
+  .player:-webkit-full-screen { border-radius: 0; border: 0; width: 100%; height: 100%; }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { font-family: var(--display); font-size: 15px; letter-spacing: .1em; color: var(--soft); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 14px; }
+  .chip.hot { color: var(--orange); border-color: rgba(252, 135, 8, .55); }
+  .info { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: clamp(18px, 2.4vw, 28px); margin-top: clamp(36px, 5vw, 56px); }
+  .stack { display: grid; gap: clamp(18px, 2.4vw, 28px); align-content: start; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(24px, 3vw, 34px); }
+  .box h2 { font-size: clamp(26px, 3vw, 32px); margin-bottom: 16px; }
+  .box > p { color: var(--soft); }
+  .box > p + p { margin-top: 12px; }
+  .keys { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 18px; align-items: baseline; margin-top: 4px; }
+  .keys dt { justify-self: start; }
+  .keys dd { margin: 0; color: var(--soft); }
+  kbd { display: inline-block; font-family: var(--display); font-size: 16px; letter-spacing: .05em; color: var(--text); background: var(--panel-2); border: 1px solid var(--line-2); border-bottom-width: 3px; border-radius: 9px; padding: 3px 10px; white-space: nowrap; }
+  .tip { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--soft); }
+  .tip b { color: var(--orange); font-weight: 600; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .list li { display: flex; gap: 12px; align-items: flex-start; color: var(--soft); }
+  .list svg { width: 22px; height: 22px; flex: none; color: var(--orange); margin-top: 2px; }
+  .box.warn { border-color: rgba(252, 135, 8, .6); background: linear-gradient(180deg, rgba(252, 135, 8, .09), var(--panel) 70%); }
+  .box.warn h2 { color: var(--orange); }
+
+  /* --- footer --- */
+  .foot { border-top: 1px solid var(--line); padding-block: 56px 44px; }
+  .foot-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .foot .badge img { height: 54px; }
+  .foot p.tag-line { color: var(--soft); margin-top: 18px; }
+  .foot hr { border: 0; border-top: 1px solid var(--line); margin: 34px 0 26px; }
+  .legal { color: var(--dim); font-size: 15px; max-width: 110ch; }
+
+  /* --- smaller screens --- */
+  @media (max-width: 1060px) {
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cards .card.game:first-child { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    .cards .card.game:first-child .cover { aspect-ratio: auto; min-height: 100%; }
+  }
+  @media (max-width: 860px) {
+    .why { grid-template-columns: minmax(0, 1fr); }
+    .info { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 680px) {
+    body { font-size: 16px; }
+    .cards, .cards.two { grid-template-columns: minmax(0, 1fr); }
+    .cards .card.game:first-child { display: flex; }
+    .cards .card.game:first-child .cover { aspect-ratio: 16 / 10; min-height: 0; }
+    .card.soon { min-height: 280px; }
+    .card.soon .q { font-size: 200px; }
+    .badge { padding: 7px 10px; }
+    .badge img { height: 32px; }
+    .top .wrap { padding-block: 10px; }
+    .event { padding: 10px 14px; gap: 12px; }
+    .event img { width: 42px; }
+    .event strong { font-size: 19px; }
+    .event span { font-size: 15px; }
+    .foot-top { flex-direction: column; align-items: flex-start; }
+  }
+  /* (while a game is being played: nothing on the page around it moves or blurs, so that the device can give the game all it has) */
+  .playing .top { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--bg); }
+  .playing .twinkle svg, .playing .event img, .playing .btn-play { animation: none; }
+  .playing .card, .playing .feature, .playing .btn { transition: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .twinkle { display: none; }
+    .pre { opacity: 1; transform: none; }
+  }
+</style>
+
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/></symbol>
+  <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 3.5l1.7 4.8a2 2 0 0 0 1.2 1.2l4.8 1.7-4.8 1.7a2 2 0 0 0-1.2 1.2L10 18.9l-1.7-4.8a2 2 0 0 0-1.2-1.2L2.3 11.2l4.8-1.7a2 2 0 0 0 1.2-1.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 2.5v4M17 4.5h4M19.5 16.5v3M18 18h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-pad" viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="12" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 10.5v4M5 12.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1.2" fill="currentColor"/><circle cx="18" cy="13.6" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-devices" viewBox="0 0 24 24"><rect x="2.5" y="4" width="14" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 18h7M9.5 14.5V18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="15.5" y="9" width="6" height="11" rx="1.6" fill="#131313" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 0c.5 6.5 5.5 11.5 12 12-6.5.5-11.5 5.5-12 12-.5-6.5-5.5-11.5-12-12C6.5 11.5 11.5 6.5 12 0z" fill="#fff"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.2" fill="currentColor"/></symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="badge" href="#home" aria-label="Midnight Grid Studios, home"><img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/mgs-logo-small.webp" alt="Midnight Grid Studios" width="388" height="208"></a>
+    <nav class="nav" aria-label="Main">
+      <a href="#home">HOME</a>
+      <a href="#games">GAMES</a>
+      <a href="#about">ABOUT</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <div class="page" data-route="home" data-title="Midnight Grid Studios">
+    <section class="hero">
+      <div class="wrap">
+        <h1 class="sign">
+          <img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/mgs-logo.webp" alt="Midnight Grid Studios" width="972" height="520">
+          <span class="twinkle" aria-hidden="true"><svg><use href="#i-star"/></svg></span>
+        </h1>
+        <p class="by">by Mason W</p>
+        <p class="tagline">Free games you can play right in your browser.</p>
+        <a class="btn" href="#games">BROWSE GAMES <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </section>
+    <section class="band">
+      <div class="wrap">
+        <div class="head" data-reveal><h2>GAMES</h2><a class="more" href="#games">SEE ALL GAMES <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+        <div class="cards" data-cards="all" data-reveal-group></div>
+      </div>
+    </section>
+    <section class="band">
+      <div class="wrap">
+        <div data-why></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- GAMES -->
+  <div class="page" data-route="games" data-title="Games · Midnight Grid Studios" hidden>
+    <section class="band">
+      <div class="wrap">
+        <div class="head"><div><h1>GAMES</h1><p class="lead">Every game here is free and plays right in your browser, on a computer, tablet or phone.</p></div></div>
+        <div class="cards" data-cards="all" data-reveal-group></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="page" data-route="about" data-title="About · Midnight Grid Studios" hidden>
+    <section class="band">
+      <div class="wrap">
+        <div class="head"><h1>ABOUT</h1></div>
+        <div class="about-copy">
+          <p>Midnight Grid Studios is an indie studio making all kinds of games you can play for free, right in your browser.</p>
+          <p>It was founded by Mason W, a young indie game developer who designs, builds and draws everything here himself.</p>
+          <p>The first game is Five Nights at Seth's, and more games are on the way. Check back soon.</p>
+        </div>
+      </div>
+    </section>
+    <section class="band">
+      <div class="wrap">
+        <div data-why></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FIVE NIGHTS AT SETH'S -->
+  <div class="page" data-route="five-nights-at-seths" data-title="Five Nights at Seth's · Midnight Grid Studios" hidden>
+    <section class="band">
+      <div class="wrap">
+        <a class="crumb" href="#games"><svg aria-hidden="true"><use href="#i-back"/></svg> ALL GAMES</a>
+        <h1 class="game-title">FIVE NIGHTS AT SETH'S</h1>
+        <div class="event" id="event" hidden>
+          <img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/pumpkin.webp" alt="" width="208" height="200">
+          <div><strong>HALLOWEEN EVENT</strong><span>On now until 31 October: pumpkins, candy and three new Halloween guns.</span></div>
+        </div>
+        <div class="player" id="player">
+          <img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/seth-cover.webp" alt="" width="710" height="438">
+          <div class="ui" id="player-ui">
+            <button class="btn btn-play" id="play" type="button"><svg aria-hidden="true"><use href="#i-play"/></svg> PLAY</button>
+            <p id="player-note">The game is about 110 MB, so it can take a moment to load.</p>
+          </div>
+        </div>
+        <div class="bar">
+          <div class="chips"><span class="chip hot">HORROR</span><span class="chip">FIRST-PERSON</span><span class="chip">SINGLE PLAYER</span></div>
+          <button class="btn btn-ghost" id="full" type="button"><svg aria-hidden="true"><use href="#i-full"/></svg> FULLSCREEN</button>
+        </div>
+        <div class="info">
+          <div class="stack">
+            <div class="box" data-reveal>
+              <h2>ABOUT THE GAME</h2>
+              <p>A first-person horror game. Survive five nights in the old house at 14 Marrow Lane. Seth is somewhere in the house, and he can hear you. Hide, stay quiet and make it to morning.</p>
+            </div>
+            <div class="box" data-reveal>
+              <h2>HOW TO PLAY</h2>
+              <dl class="keys">
+                <dt><kbd>W A S D</kbd></dt><dd>Move</dd>
+                <dt><kbd>MOUSE</kbd></dt><dd>Look around</dd>
+                <dt><kbd>E</kbd> / <kbd>CLICK</kbd></dt><dd>Open, close, read, take, hide</dd>
+                <dt><kbd>SHIFT</kbd></dt><dd>Run (running is loud)</dd>
+                <dt><kbd>C</kbd></dt><dd>Crouch</dd>
+                <dt><kbd>F</kbd></dt><dd>Torch on or off</dd>
+                <dt><kbd>Q</kbd></dt><dd>Throw a bottle</dd>
+                <dt><kbd>1</kbd> – <kbd>5</kbd></dt><dd>Take out the torch or a gun, and put it away again</dd>
+                <dt><kbd>CLICK</kbd> / <kbd>SPACE</kbd></dt><dd>Fire, when a gun is out</dd>
+                <dt><kbd>R</kbd></dt><dd>Reload</dd>
+                <dt><kbd>ESC</kbd> / <kbd>P</kbd></dt><dd>Pause</dd>
+              </dl>
+              <p class="tip">On a phone or tablet: move with your left thumb, swipe with your right thumb to look, and use the buttons on screen for everything else.</p>
+              <p class="tip"><b>Watch the eye</b> at the top of the screen. It opens when Seth is near, and if it turns red, he has found you.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="box" data-reveal>
+              <h2>WORKS ON</h2>
+              <ul class="list">
+                <li><svg aria-hidden="true"><use href="#i-check"/></svg>Computer, with keyboard and mouse</li>
+                <li><svg aria-hidden="true"><use href="#i-check"/></svg>Tablet</li>
+                <li><svg aria-hidden="true"><use href="#i-check"/></svg>Phone</li>
+              </ul>
+            </div>
+            <div class="box" data-reveal>
+              <h2>GOOD TO KNOW</h2>
+              <ul class="list">
+                <li><svg aria-hidden="true"><use href="#i-check"/></svg>Best played in the dark, with headphones.</li>
+                <li><svg aria-hidden="true"><use href="#i-check"/></svg>Your progress is saved in your browser.</li>
+                <li><svg aria-hidden="true"><use href="#i-check"/></svg>Graphics can be set to Full or Lighter in the game's settings.</li>
+              </ul>
+            </div>
+            <div class="box warn" data-reveal>
+              <h2>WARNING</h2>
+              <ul class="list">
+                <li><svg aria-hidden="true"><use href="#i-warn"/></svg>Contains jump scares, flashing lights and loud sounds.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="band">
+      <div class="wrap">
+        <div class="head" data-reveal><h2>MORE GAMES</h2><a class="more" href="#games">ALL GAMES <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+        <div class="cards two" data-cards="soon" data-reveal-group></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <a class="badge" href="#home" aria-label="Midnight Grid Studios, home"><img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/mgs-logo-small.webp" alt="Midnight Grid Studios" width="388" height="208"></a>
+        <p class="tag-line">Free games you can play right in your browser.</p>
+      </div>
+      <nav class="nav" aria-label="Footer">
+        <a href="#home">HOME</a>
+        <a href="#games">GAMES</a>
+        <a href="#about">ABOUT</a>
+      </nav>
+    </div>
+    <hr>
+    <p class="legal">© <span id="year">2026</span> Midnight Grid Studios. All rights reserved. All games, characters, artwork, music and code on this site belong to Midnight Grid Studios and may not be copied, downloaded, re-uploaded or embedded on other websites.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // The games, in the order they are shown. A new game: one more entry here (and its own page above).
+  var GAMES = [
+    { id: 'five-nights-at-seths', title: "FIVE NIGHTS AT SETH'S", tag: 'HORROR', cover: 'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@4dee405ed10a5769e45ac2234d71c972cd292082/img/seth-cover.webp',
+      alt: 'An old wooden house at night behind a white picket fence, with a figure in an upstairs window',
+      blurb: 'A first-person horror game. Survive five nights in the old house at 14 Marrow Lane.' }
+  ];
+  var SOON = ['A new game is in the works — genre reveal coming soon.', 'Another one is on the way. Watch this space.'];
+  // Where each game's files are (inside this website)
+  // (each game's own folder in this website, and the page in it: '' where the host hands out a folder's index.html by itself)
+  var PLAY = { 'five-nights-at-seths': '__GAME_URL__' }, PAGE = '';
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function gameCard(g) {
+    return '<article class="card game"><a class="cover" href="#' + g.id + '" tabindex="-1" aria-hidden="true"><img src="' + g.cover + '" alt="' + esc(g.alt) + '" loading="lazy"><span class="tag">' + esc(g.tag) + '</span></a>' +
+      '<div class="body"><h3>' + esc(g.title) + '</h3><p>' + esc(g.blurb) + '</p><a class="btn btn-block" href="#' + g.id + '">PLAY</a></div></article>';
+  }
+  function soonCard(t) {
+    return '<article class="card soon"><div class="q" aria-hidden="true">?</div><div class="inner"><svg aria-hidden="true"><use href="#i-lock"/></svg><h3>COMING SOON</h3><p>' + esc(t) + '</p></div></article>';
+  }
+  var WHY = '<span class="eyebrow">WHY PLAY HERE</span><h2 class="why-title">FREE, INSTANT, EVERYWHERE</h2>' +
+    '<div class="why" data-reveal-group>' +
+    '<div class="feature"><svg aria-hidden="true"><use href="#i-spark"/></svg><h3>FREE TO PLAY</h3><p>Every game on the site is free. No paywalls, no downloads, nothing to install.</p></div>' +
+    '<div class="feature"><svg aria-hidden="true"><use href="#i-pad"/></svg><h3>STRAIGHT IN THE BROWSER</h3><p>Pick a game, hit play and it opens right on the page. No store, no launcher, no waiting.</p></div>' +
+    '<div class="feature"><svg aria-hidden="true"><use href="#i-devices"/></svg><h3>ANY DEVICE</h3><p>Computer, tablet or phone. The site and the games shape themselves to whatever you are holding.</p></div></div>';
+
+  document.querySelectorAll('[data-cards]').forEach(function (box) {
+    var html = box.getAttribute('data-cards') === 'all' ? GAMES.map(gameCard).join('') : '';
+    html += SOON.map(soonCard).join(''); box.innerHTML = html;
+  });
+  document.querySelectorAll('[data-why]').forEach(function (box) { box.innerHTML = WHY; });
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // --- October: the Halloween look on Five Nights at Seth's page
+  if (new Date().getMonth() === 9) {
+    document.getElementById('event').hidden = false;
+  }
+
+  // --- pages: one shows at a time, chosen by the part of the address after the #
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  function route() {
+    var r = (window.__route || (location.hash || '').replace(/^#\/?/, '')) || 'home';
+    if (!pages.some(function (p) { return p.getAttribute('data-route') === r; })) r = 'home';
+    return r;
+  }
+  function show(first) {
+    var r = route(), here = null;
+    pages.forEach(function (p) {
+      var on = p.getAttribute('data-route') === r; p.hidden = !on;
+      if (on) { here = p; p.classList.remove('enter'); void p.offsetWidth; p.classList.add('enter'); }
+    });
+    var tab = r === 'five-nights-at-seths' ? 'games' : r;
+    links.forEach(function (a) { var on = a.getAttribute('href') === '#' + tab; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (here) document.title = here.getAttribute('data-title');
+    if (!first) { var h = document.documentElement, was = h.style.scrollBehavior; h.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); h.style.scrollBehavior = was; }
+    reveal(here);
+  }
+  window.addEventListener('hashchange', function () { window.__route = ''; show(false); });
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href').slice(1); if (!pages.some(function (p) { return p.getAttribute('data-route') === id; })) return;
+    e.preventDefault(); window.__route = id; show(false);
+  });
+
+  // --- things further down slide up as they come into view (only what starts below the fold is held back)
+  var watcher = 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches ? new IntersectionObserver(function (seen) {
+    seen.forEach(function (e) {
+      if (!e.isIntersecting) return; watcher.unobserve(e.target);
+      var kids = e.target.hasAttribute('data-reveal-group') ? Array.prototype.slice.call(e.target.children) : [e.target];
+      kids.forEach(function (k, i) { k.style.transitionDelay = (i * 90) + 'ms'; k.classList.add('in'); k.classList.remove('pre'); setTimeout(function () { k.style.transitionDelay = ''; }, 900 + i * 90); });
+    });
+  }, { rootMargin: '0px 0px -8% 0px' }) : null;
+  function reveal(page) {
+    if (!watcher || !page) return;
+    requestAnimationFrame(function () {
+      page.querySelectorAll('[data-reveal], [data-reveal-group]').forEach(function (el) {
+        if (el.getBoundingClientRect().top < innerHeight * 0.92) return;
+        var kids = el.hasAttribute('data-reveal-group') ? Array.prototype.slice.call(el.children) : [el];
+        kids.forEach(function (k) { k.classList.remove('in'); k.classList.add('pre'); });
+        watcher.observe(el);
+      });
+    });
+  }
+
+  // --- the header gets a shadow once the page has moved
+  var top = document.getElementById('top');
+  window.addEventListener('scroll', function () { top.classList.toggle('scrolled', window.scrollY > 8); }, { passive: true });
+
+  // --- Five Nights at Seth's: the game starts only when PLAY is pressed (it is a big download)
+  var player = document.getElementById('player'), ui = document.getElementById('player-ui'), note = document.getElementById('player-note');
+  var phone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+  var dir = PLAY['five-nights-at-seths'], src = dir + PAGE, started = false;
+  function there() {
+    // (in a preview of this site the game may not be alongside it)
+    return Promise.resolve(true);
+  }
+  function start() {
+    if (started) return; started = true;
+    there().then(function (ok) {
+      if (!ok) { started = false; note.textContent = 'This is a preview: the game will play here once the website is online.'; return; }
+      
+      var f = document.createElement('iframe'); f.src = src; f.title = "Five Nights at Seth's"; f.allow = 'fullscreen; autoplay; gamepad'; f.setAttribute('allowfullscreen', '');
+      ui.remove(); player.appendChild(f); try { f.focus(); } catch (e) { }
+      // while the game is going, the page around it keeps still (nothing else moving or blurring), so that all of the device's
+      // effort goes into the game; and the game is brought into the middle of the window
+      document.body.classList.add('playing'); try { player.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { player.scrollIntoView(); }
+    });
+  }
+  document.getElementById('play').addEventListener('click', start);
+  var full = document.getElementById('full');
+  if (phone) full.hidden = true;
+  full.addEventListener('click', function () {
+    var go = player.requestFullscreen || player.webkitRequestFullscreen;
+    if (go) { try { var p = go.call(player); if (p && p.catch) p.catch(function () { }); } catch (e) { } }
+    start();
+  });
+
+  show(true);
+})();
+</script>
+
+</body>
+</html>

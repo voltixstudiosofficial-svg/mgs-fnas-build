@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <title>Five Nights at Seth's</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<script>var FNAS_CDN={desktop:'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@7d86c6ab850500e61f60150316f2e174c4275ca5/g/',mobile:'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@88112f78bc696b421db24204d37689fb67b98a70/g/'};</script>
+<script>// the launcher is this game's home too: when the game is shown by the Midnight Grid Studios Apps Script, it is told its real site
+if (/-script\.googleusercontent\.com$/.test(location.hostname)) window.__fnasUrl = 'https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/';</script>
+<script>var FNAS_CDN={desktop:'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@34fb675bb02e33bbdfba7176a3cd7626e6a56d11/g/',mobile:'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@1a25e2ace2f3c64902e00bd71502f18259a10c85/g/'};</script>
 <style>
 /* One full-frame stage: the game's picture, and over it (until the game is ready) a plain loading screen. A single dark look, as the game is. */
 :root { color-scheme: dark; --void: #040506; --ash: #b9b4a8; --bone: #e9e4d6; --dust: #6f6a60; --green: #3fe081; --ember: #d8452f; }
@@ -32,7 +34,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     <button id="again" type="button">TRY AGAIN</button>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@7d86c6ab850500e61f60150316f2e174c4275ca5/g/studio.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@34fb675bb02e33bbdfba7176a3cd7626e6a56d11/g/studio.js"></script>
 <script>
 // The game's files are too big to be kept whole here, so they are kept in pieces. This fetches the pieces, puts them together,
 // unpacks them, and hands them to the game's own loader as if they had come from a web address.

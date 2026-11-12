@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <script>// the launcher is this game's home too: when the game is shown by the Midnight Grid Studios Apps Script, it is told its real site
 if (/-script\.googleusercontent\.com$/.test(location.hostname)) window.__fnasUrl = 'https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/';</script>
-<script>var FNAS_CDN={desktop:'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@34fb675bb02e33bbdfba7176a3cd7626e6a56d11/g/',mobile:'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@1a25e2ace2f3c64902e00bd71502f18259a10c85/g/'};</script>
+<script>var FNAS_CDN={'desktop':['https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@16705ffd22cc8f2e4f20c9cabbfd7382501ad135/g/','https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@137ceb3bf331bee7bdce1fc8726e65410fd97316/g/'],'mobile':'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@693d8ec3aae203e1cdeeaf9316e46ad03ee59435/g/'};</script>
 <style>
 /* One full-frame stage: the game's picture, and over it (until the game is ready) a plain loading screen. A single dark look, as the game is. */
 :root { color-scheme: dark; --void: #040506; --ash: #b9b4a8; --bone: #e9e4d6; --dust: #6f6a60; --green: #3fe081; --ember: #d8452f; }
@@ -34,12 +34,12 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     <button id="again" type="button">TRY AGAIN</button>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@34fb675bb02e33bbdfba7176a3cd7626e6a56d11/g/studio.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@16705ffd22cc8f2e4f20c9cabbfd7382501ad135/g/studio.js"></script>
 <script>
 // The game's files are too big to be kept whole here, so they are kept in pieces. This fetches the pieces, puts them together,
 // unpacks them, and hands them to the game's own loader as if they had come from a web address.
 (function () {
-  var M = {"product":"Five Nights at Seth's","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":35874908,"parts":[11732183]},{"name":"data","id":"d","type":"application/octet-stream","size":118617669,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,11775579],"kind":"desktop"},{"name":"data","id":"m","type":"application/octet-stream","size":130353366,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,6941201],"kind":"mobile"}],"x":829560271,"b":829560271};
+  var M = {"product":"Five Nights at Seth's","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":40061053,"parts":[12222745]},{"name":"data","id":"d","type":"application/octet-stream","size":157944352,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,3276693],"kind":"desktop","at":[0,0,0,0,0,0,0,0,1,1]},{"name":"data","id":"m","type":"application/octet-stream","size":145802724,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,5076092],"kind":"mobile"}],"x":1268918608,"b":1268918608};
   var canvas = document.getElementById('unity-canvas'), wait = document.getElementById('wait'), bar = document.querySelector('#bar i'), say = document.getElementById('say'), again = document.getElementById('again');
   function fail(msg) { say.className = 'bad'; say.textContent = msg; bar.parentNode.style.display = 'none'; again.style.display = 'inline-block'; }
   again.addEventListener('click', function () { again.style.display = 'none'; say.className = ''; bar.parentNode.style.display = ''; run(); });

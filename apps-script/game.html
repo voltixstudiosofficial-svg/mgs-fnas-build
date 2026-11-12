@@ -44,7 +44,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   function fail(msg) { say.className = 'bad'; say.textContent = msg; bar.parentNode.style.display = 'none'; again.style.display = 'inline-block'; }
   again.addEventListener('click', function () { again.style.display = 'none'; say.className = ''; bar.parentNode.style.display = ''; run(); });
   // first of all, the studio's sign (it plays while the game downloads underneath)
-  if (window.fnasStudio) window.fnasStudio(FNAS_CDN.desktop, document.getElementById('stage'));
+  if (window.fnasStudio) window.fnasStudio([].concat(FNAS_CDN.desktop)[0], document.getElementById('stage'));
   ['gesturestart', 'gesturechange', 'gestureend', 'contextmenu'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
   canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
   if (!M) { fail('The game has not been put here yet.'); return; }
@@ -55,7 +55,9 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   // (a phone or tablet cannot draw the pictures packed for computers: when there is a version packed for it, that one is fetched instead)
   var kind = window.__fnasKind === 'mobile' || window.__fnasKind === 'desktop' ? window.__fnasKind : (gl.getExtension('WEBGL_compressed_texture_s3tc') || !gl.getExtension('WEBGL_compressed_texture_astc')) ? 'desktop' : 'mobile';      // (__fnasKind: set only by the page's own tests)
   // (every build's pieces share the same names but hold new contents; a tag that changes with each build is added to every address, so a browser that kept an older build's files never serves those in place of these)
-  var G = FNAS_CDN[kind];
+  // (a build too big for one place is kept in two: each piece says which of them holds it)
+  var GS = [].concat(FNAS_CDN[kind]), G = GS[0];
+  function partUrl(set, i) { return GS[set.at ? set.at[i] : 0] + set.id + i + '.wasm' + VQ; }
   var ver = typeof M.b === 'number' ? M.b : (typeof M.x === 'number' ? (M.x >>> 0) : (M.version || '1')), VQ = '?v=' + ver;
   var sets = M.sets.filter(function (s) { return !s.kind || s.kind === kind; }), frameworkUrl = (M.frameworks && M.frameworks[kind] ? M.frameworks[kind] : G + 'framework.js') + VQ;
   var got = 0, total = 0; sets.forEach(function (s) { s.parts.forEach(function (n) { total += n; }); });
@@ -124,7 +126,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   // a whole file: its pieces (three at a time), joined and unpacked
   async function whole(set) {
     var blobs = new Array(set.parts.length), next = 0;
-    async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(G + set.id + i + '.wasm' + VQ, set.parts[i]), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
+    async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(partUrl(set, i), set.parts[i]), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
     await Promise.all([worker(), worker(), worker()]);
     if (set.name === 'data') { say.textContent = 'Unpacking'; }
     var unpacked = await new Response(new Blob(blobs).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
@@ -134,7 +136,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
 
   function run() { got = 0; return (async function () {
     show();
-    var all = [G + 'loader.js' + VQ, frameworkUrl]; sets.forEach(function (st) { st.parts.forEach(function (n, i) { all.push(G + st.id + i + '.wasm' + VQ); }); }); warm(all);
+    var all = [G + 'loader.js' + VQ, frameworkUrl]; sets.forEach(function (st) { st.parts.forEach(function (n, i) { all.push(partUrl(st, i)); }); }); warm(all);
     var files = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
     show(true);
     // the files are here; let the studio sign finish before the heavy start-up (compiling the game, opening the graphics), so the sign stays smooth to the very end

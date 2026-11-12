@@ -69,19 +69,41 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   // (waits until the studio sign has lifted — or a tap has sent it away, or it has had its full time — so the heavy start-up never fights the sign)
   function afterIntro() { return new Promise(function (ok) { if (window.fnasIntro !== 0) return ok(); var t = setInterval(function () { if (window.fnasIntro !== 0) { clearInterval(t); ok(); } }, 50); setTimeout(function () { clearInterval(t); ok(); }, 10000); }); }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-  // one piece (tried again a few times if the line drops)
-  var kept = {};
-  async function piece(url) {
+  // one piece. A first visit can find the file host cold: it then fetches the piece from far away first and the download can sit still
+  // for a long time. So a watchdog drops any download that stops moving and asks again (by then the host has it ready), sometimes from
+  // the host's other doors; and what comes back must be the right size, or it is asked for again too.
+  var kept = {}, HOSTS = ['cdn.jsdelivr.net', 'cdn.jsdelivr.net', 'fastly.jsdelivr.net', 'cdn.jsdelivr.net', 'gcore.jsdelivr.net'];
+  function via(url, attempt) { var h = HOSTS[attempt % HOSTS.length]; return h === 'cdn.jsdelivr.net' ? url : url.replace('//cdn.jsdelivr.net/', '//' + h + '/'); }
+  async function piece(url, size) {
     if (kept[url]) { got += kept[url].size; show(); return kept[url]; }
     for (var attempt = 0; ; attempt++) {
-      var mine = 0;
+      var mine = 0, ac = typeof AbortController !== 'undefined' ? new AbortController() : null, last = Date.now(), dog = null;
       try {
-        var r = await fetch(url, { cache: attempt ? 'reload' : 'force-cache' }); if (!r.ok) throw new Error('could not fetch ' + url + ' (' + r.status + ')');
-        if (!r.body || !r.body.getReader) { var all = await r.arrayBuffer(); mine = all.byteLength; got += mine; show(); return (kept[url] = new Blob([all])); }
-        var reader = r.body.getReader(), chunks = [];
-        for (;;) { var step = await reader.read(); if (step.done) break; chunks.push(step.value); mine += step.value.length; got += step.value.length; show(); }
-        return (kept[url] = new Blob(chunks));
-      } catch (e) { got -= mine; show(); if (attempt >= 6) throw e; await sleep(Math.min(15000, 1500 * Math.pow(2, attempt))); }
+        if (ac) dog = setInterval(function () { if (Date.now() - last > (mine ? 12000 : 20000)) ac.abort(); }, 1000);
+        var r = await fetch(via(url, attempt), { cache: attempt ? 'reload' : 'default', signal: ac ? ac.signal : undefined }); if (!r.ok) throw new Error('could not fetch ' + url + ' (' + r.status + ')');
+        var blob;
+        if (!r.body || !r.body.getReader) { var all = await r.arrayBuffer(); mine = all.byteLength; got += mine; show(); blob = new Blob([all]); }
+        else {
+          var reader = r.body.getReader(), chunks = [];
+          for (;;) { var step = await reader.read(); last = Date.now(); if (step.done) break; chunks.push(step.value); mine += step.value.length; got += step.value.length; show(); }
+          blob = new Blob(chunks);
+        }
+        if (size && (blob.size < size || blob.size > size + 32)) throw new Error('a piece came back the wrong size');
+        return (kept[url] = blob);
+      } catch (e) { got -= mine; show(); if (attempt >= 11) throw e; await sleep(Math.min(6000, 800 * Math.pow(2, attempt))); }
+      finally { if (dog) clearInterval(dog); }
+    }
+  }
+  // (on arrival, every piece is asked about at once with a tiny request: a cold host starts getting all of them ready straight away)
+  function warm(urls) { urls.forEach(function (u) { try { fetch(u, { method: 'HEAD', cache: 'no-store', mode: 'cors' }).catch(function () { }); } catch (e) { } }); }
+  // a script, with a time limit and a few tries
+  async function script(url) {
+    for (var attempt = 0; ; attempt++) {
+      try {
+        await new Promise(function (ok, bad) { var s = document.createElement('script'), t = setTimeout(function () { s.remove(); bad(new Error('the loader did not arrive')); }, 25000);
+          s.src = via(url, attempt) + (attempt ? '&r=' + attempt : ''); s.onload = function () { clearTimeout(t); ok(); }; s.onerror = function () { clearTimeout(t); s.remove(); bad(new Error('the loader did not arrive')); }; document.body.appendChild(s); });
+        return;
+      } catch (e) { if (attempt >= 5) throw e; await sleep(1000 * (attempt + 1)); }
     }
   }
   // (a piece comes dressed as a small WebAssembly file, the kind of file that is handed out here: its wrapping is taken off)
@@ -102,8 +124,9 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   // a whole file: its pieces (three at a time), joined and unpacked
   async function whole(set) {
     var blobs = new Array(set.parts.length), next = 0;
-    async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(G + set.id + i + '.wasm' + VQ), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
+    async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(G + set.id + i + '.wasm' + VQ, set.parts[i]), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
     await Promise.all([worker(), worker(), worker()]);
+    if (set.name === 'data') { say.textContent = 'Unpacking'; }
     var unpacked = await new Response(new Blob(blobs).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
     if (unpacked.size !== set.size) throw new Error('a file did not arrive whole (' + set.id + ': ' + unpacked.size + ' of ' + set.size + ')');
     return new Blob([unpacked], { type: set.type });
@@ -111,6 +134,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
 
   function run() { got = 0; return (async function () {
     show();
+    var all = [G + 'loader.js' + VQ, frameworkUrl]; sets.forEach(function (st) { st.parts.forEach(function (n, i) { all.push(G + st.id + i + '.wasm' + VQ); }); }); warm(all);
     var files = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
     show(true);
     // the files are here; let the studio sign finish before the heavy start-up (compiling the game, opening the graphics), so the sign stays smooth to the very end
@@ -130,7 +154,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
       };
       config.dataUrl = 'g/whole.data'; config.codeUrl = 'g/whole.wasm';
     }
-    await new Promise(function (ok, bad) { var s = document.createElement('script'); s.src = G + 'loader.js' + VQ; s.onload = ok; s.onerror = function () { bad(new Error('the loader did not arrive')); }; document.body.appendChild(s); });
+    if (typeof createUnityInstance === 'undefined') await script(G + 'loader.js' + VQ);
     var instance = await createUnityInstance(canvas, config, function (p) { bar.style.width = Math.round((0.92 + 0.08 * p) * 100) + '%'; });
     window.unityInstance = instance; wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; }, 700); try { canvas.focus(); } catch (e) { }
   })().catch(function (err) { fail('The game could not start here: ' + (err && err.message ? err.message : err)); if (window.console) console.error(err); }); }

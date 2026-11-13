@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <script>// the launcher is this game's home too: when the game is shown by the Midnight Grid Studios Apps Script, it is told its real site
 if (/-script\.googleusercontent\.com$/.test(location.hostname)) window.__fnasUrl = 'https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/';</script>
-<script>var FNAS_CDN={'desktop':['https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@a34f35f46346aacbfa231006db51cffabe670d2e/g/','https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@1922f7de285f701cf857e3f9de34533e96e2293e/g/'],'mobile':'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@df0d49fc90d8284cc6bc76e5ee074aa5eae861b9/g/'};</script>
+<script>var FNAS_CDN={'desktop':['https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@a9115a0541da4ba201496f0b3b80517fb37afeeb/g/','https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@1922f7de285f701cf857e3f9de34533e96e2293e/g/'],'mobile':'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@c4179164bd54cc2f708e85956df233c01bbe7797/g/'};</script>
 <style>
 /* One full-frame stage: the game's picture, and over it (until the game is ready) a plain loading screen. A single dark look, as the game is. */
 :root { color-scheme: dark; --void: #040506; --ash: #b9b4a8; --bone: #e9e4d6; --dust: #6f6a60; --green: #3fe081; --ember: #d8452f; }
@@ -34,7 +34,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     <button id="again" type="button">TRY AGAIN</button>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@a34f35f46346aacbfa231006db51cffabe670d2e/g/studio.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@a9115a0541da4ba201496f0b3b80517fb37afeeb/g/studio.js"></script>
 <script>
 // The game's files are too big to be kept whole here, so they are kept in pieces. This fetches the pieces, puts them together,
 // unpacks them, and hands them to the game's own loader as if they had come from a web address.
@@ -142,7 +142,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     // the files are here; let the studio sign finish before the heavy start-up (compiling the game, opening the graphics), so the sign stays smooth to the very end
     await afterIntro();
     say.textContent = 'Starting'; bar.style.width = '92%';
-    var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: 'StreamingAssets', companyName: M.company || 'DefaultCompany', productName: M.product, productVersion: M.version || '1.0',
+    var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: G + 'StreamingAssets',      /* (whole: the page may have no address of its own when it is opened inside the website) */ companyName: M.company || 'DefaultCompany', productName: M.product, productVersion: M.version || '1.0',
       devicePixelRatio: Math.min(window.devicePixelRatio || 1, 3), matchWebGLToCanvasSize: true,
       showBanner: function (msg, type) { if (type === 'error') fail(msg); else if (window.console) console.warn(msg); } };
     if (M.mode === 'blob') { config.dataUrl = URL.createObjectURL(files.data); config.codeUrl = URL.createObjectURL(files.code); }

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <script>// the launcher is this game's home too: when the game is shown by the Midnight Grid Studios Apps Script, it is told its real site
 if (/-script\.googleusercontent\.com$/.test(location.hostname)) window.__fnasUrl = 'https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/';</script>
-<script>var FNAS_CDN={'desktop':['https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@2e3a6bf8cb9d41db7ea94c387b0b2644cb33e346/g/'],'mobile':'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@0fc8b742ed98b3f415557abe59642cb8de7c06ff/g/'};</script>
+<script>var FNAS_CDN={'desktop':['https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@0ff7a4eaf09f94e42ad423e42d0ec134d850a6cc/g/','https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@67c2a97af3c2e5c59f73707d06b826069d90a948/g/'],'mobile':['https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@c5f170879e754f935a685235ddab125d0d10afa9/g/','https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@f40bfd0ff8cdc082a80832e3c64879478acd69e5/g/']};</script>
 <style>
 /* One full-frame stage: the game's picture, and over it (until the game is ready) a plain loading screen. A single dark look, as the game is. */
 :root { color-scheme: dark; --void: #040506; --ash: #b9b4a8; --bone: #e9e4d6; --dust: #6f6a60; --green: #3fe081; --ember: #d8452f; }
@@ -34,12 +34,12 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     <button id="again" type="button">TRY AGAIN</button>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@2e3a6bf8cb9d41db7ea94c387b0b2644cb33e346/g/studio.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@0ff7a4eaf09f94e42ad423e42d0ec134d850a6cc/g/studio.js"></script>
 <script>
 // The game's files are too big to be kept whole here, so they are kept in pieces. This fetches the pieces, puts them together,
 // unpacks them, and hands them to the game's own loader as if they had come from a web address.
 (function () {
-  var M = {"product":"Five Nights at Seth's","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":32941229,"parts":[10276942],"kind":"desktop"},{"name":"code","id":"v","type":"application/wasm","size":32941229,"parts":[10276942],"kind":"mobile"},{"name":"data","id":"d","type":"application/octet-stream","size":144846370,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,8031132],"kind":"desktop"},{"name":"data","id":"m","type":"application/octet-stream","size":131441994,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,8447543],"kind":"mobile"}],"x":296598650,"b":296598650};
+  var M = {"product":"Five Nights at Seth's","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":32973485,"parts":[10284038],"kind":"desktop"},{"name":"code","id":"v","type":"application/wasm","size":32973485,"parts":[10284038],"kind":"mobile"},{"name":"data","id":"d","type":"application/octet-stream","size":202141607,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14191836],"kind":"desktop","at":[0,0,0,0,0,0,0,0,1,1,1,1]},{"name":"data","id":"m","type":"application/octet-stream","size":189523156,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,370579],"kind":"mobile","at":[0,0,0,0,0,0,0,0,1,1,1,1]}],"x":629414930,"b":629414930};
   var canvas = document.getElementById('unity-canvas'), wait = document.getElementById('wait'), bar = document.querySelector('#bar i'), say = document.getElementById('say'), again = document.getElementById('again');
   function fail(msg) { say.className = 'bad'; say.textContent = msg; bar.parentNode.style.display = 'none'; again.style.display = 'inline-block'; }
   again.addEventListener('click', function () { again.style.display = 'none'; say.className = ''; bar.parentNode.style.display = ''; run(); });

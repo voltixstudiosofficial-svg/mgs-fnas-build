@@ -148,7 +148,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   function run() { got = 0; return (async function () {
     show();
     var all = [G + 'loader.js' + VQ, frameworkUrl]; sets.forEach(function (st) { st.parts.forEach(function (n, i) { all.push(partUrl(st, i)); }); }); warm(all);
-    var files = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
+    var files = {}, names = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
     show(true);
     // the files are here; let the studio sign finish before the heavy start-up (compiling the game, opening the graphics), so the sign stays smooth to the very end
     await afterIntro();
@@ -159,7 +159,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     if (M.mode === 'blob') { config.dataUrl = URL.createObjectURL(files.data); config.codeUrl = URL.createObjectURL(files.code.buf ? new Blob([files.code.buf], { type: files.code.type }) : files.code); }
     else {
       // the loader asks for two made-up addresses; what it gets is what has just been put together
-      var real = window.fetch.bind(window), names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
+      var real = window.fetch.bind(window); names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
       window.fetch = function (input, init) {
         var u = typeof input === 'string' ? input : input && input.url ? input.url : String(input);
         for (var k in names) if (u.length >= k.length && u.substr(u.length - k.length) === k) { var f = names[k]; return Promise.resolve(new Response(f.buf ? f.buf.slice(0) : f, { status: 200, headers: { 'Content-Type': f.type, 'Content-Length': String(f.size) } })); }
@@ -169,7 +169,10 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     }
     if (typeof createUnityInstance === 'undefined') await script(G + 'loader.js' + VQ);
     var instance = await createUnityInstance(canvas, config, function (p) { bar.style.width = Math.round((0.92 + 0.08 * p) * 100) + '%'; });
-    window.unityInstance = instance; try { window.name = ''; } catch (e) { } wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; }, 700); try { canvas.focus(); } catch (e) { }
+    window.unityInstance = instance; try { window.name = ''; } catch (e) { }
+    // (the game now holds its own copy of everything: the downloaded copies are let go, so they are not kept in the iPad's memory all game long —
+    // keeping them was hundreds of MB the browser had to hold on top of the game, enough for an iPad to shut the page partway through)
+    kept = {}; names = {}; files = null; if (config.dataUrl.indexOf('blob:') === 0) { try { URL.revokeObjectURL(config.dataUrl); URL.revokeObjectURL(config.codeUrl); } catch (e) { } } wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; }, 700); try { canvas.focus(); } catch (e) { }
   })().catch(function (err) {
     if (window.console) console.error(err);
     kept = {};

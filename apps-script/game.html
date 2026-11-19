@@ -42,7 +42,7 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   var M = {"product":"Five Nights at Seth's","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":32973485,"parts":[10284038],"kind":"desktop"},{"name":"code","id":"v","type":"application/wasm","size":32973485,"parts":[10284038],"kind":"mobile"},{"name":"data","id":"d","type":"application/octet-stream","size":202141607,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14191836],"kind":"desktop","at":[0,0,0,0,0,0,0,0,1,1,1,1]},{"name":"data","id":"m","type":"application/octet-stream","size":189523156,"parts":[14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,14680064,370579],"kind":"mobile","at":[0,0,0,0,0,0,0,0,1,1,1,1]}],"x":629414930,"b":629414930};
   var canvas = document.getElementById('unity-canvas'), wait = document.getElementById('wait'), bar = document.querySelector('#bar i'), say = document.getElementById('say'), again = document.getElementById('again');
   function fail(msg) { say.className = 'bad'; say.textContent = msg; bar.parentNode.style.display = 'none'; again.style.display = 'inline-block'; }
-  again.addEventListener('click', function () { again.style.display = 'none'; say.className = ''; bar.parentNode.style.display = ''; run(); });
+  again.addEventListener('click', function () { again.style.display = 'none'; say.className = ''; bar.parentNode.style.display = ''; try { window.name = ''; } catch (e) { } location.reload(); });
   // first of all, the studio's sign (it plays while the game downloads underneath)
   if (window.fnasStudio) window.fnasStudio([].concat(FNAS_CDN.desktop)[0], document.getElementById('stage'));
   ['gesturestart', 'gesturechange', 'gestureend', 'contextmenu'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
@@ -124,14 +124,25 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
   }
   function seedOf(id, i) { return (M.x ^ Math.imul(id.charCodeAt(0), 0x01000193) ^ Math.imul(i + 1, 0x27D4EB2F)) | 0; }
   // a whole file: its pieces (three at a time), joined and unpacked
+  // (Safari on iPads sometimes loses a downloaded piece it was holding — "The object can not be found here" — so a file that fails
+  // to come together is simply fetched again, from scratch, a few times, before anything is said about it)
   async function whole(set) {
+    for (var tries = 0; ; tries++) {
+      try { return await wholeOnce(set); }
+      catch (e) { set.parts.forEach(function (n, i) { delete kept[partUrl(set, i)]; }); if (tries >= 3) throw e; await sleep(700 * (tries + 1)); }
+    }
+  }
+  async function wholeOnce(set) {
     var blobs = new Array(set.parts.length), next = 0;
     async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(partUrl(set, i), set.parts[i]), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
     await Promise.all([worker(), worker(), worker()]);
     if (set.name === 'data') { say.textContent = 'Unpacking'; }
     var unpacked = await new Response(new Blob(blobs).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
     if (unpacked.size !== set.size) throw new Error('a file did not arrive whole (' + set.id + ': ' + unpacked.size + ' of ' + set.size + ')');
-    return new Blob([unpacked], { type: set.type });
+    if (set.name === 'code') return { buf: await unpacked.arrayBuffer(), type: set.type, size: set.size };
+    var out = new Blob([unpacked], { type: set.type });
+    await out.slice(0, 16).arrayBuffer();      // (reads a little of it straight away: a lost file shows up here, where it is fetched again)
+    return out;
   }
 
   function run() { got = 0; return (async function () {
@@ -145,21 +156,30 @@ body { margin: 0; background: var(--void); color: var(--ash); overflow: hidden; 
     var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: G + 'StreamingAssets',      /* (whole: the page may have no address of its own when it is opened inside the website) */ companyName: M.company || 'DefaultCompany', productName: M.product, productVersion: M.version || '1.0',
       devicePixelRatio: Math.min(window.devicePixelRatio || 1, 3), matchWebGLToCanvasSize: true,
       showBanner: function (msg, type) { if (type === 'error') fail(msg); else if (window.console) console.warn(msg); } };
-    if (M.mode === 'blob') { config.dataUrl = URL.createObjectURL(files.data); config.codeUrl = URL.createObjectURL(files.code); }
+    if (M.mode === 'blob') { config.dataUrl = URL.createObjectURL(files.data); config.codeUrl = URL.createObjectURL(files.code.buf ? new Blob([files.code.buf], { type: files.code.type }) : files.code); }
     else {
       // the loader asks for two made-up addresses; what it gets is what has just been put together
       var real = window.fetch.bind(window), names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
       window.fetch = function (input, init) {
         var u = typeof input === 'string' ? input : input && input.url ? input.url : String(input);
-        for (var k in names) if (u.length >= k.length && u.substr(u.length - k.length) === k) return Promise.resolve(new Response(names[k], { status: 200, headers: { 'Content-Type': names[k].type, 'Content-Length': String(names[k].size) } }));
+        for (var k in names) if (u.length >= k.length && u.substr(u.length - k.length) === k) { var f = names[k]; return Promise.resolve(new Response(f.buf ? f.buf.slice(0) : f, { status: 200, headers: { 'Content-Type': f.type, 'Content-Length': String(f.size) } })); }
         return real(input, init);
       };
       config.dataUrl = 'g/whole.data'; config.codeUrl = 'g/whole.wasm';
     }
     if (typeof createUnityInstance === 'undefined') await script(G + 'loader.js' + VQ);
     var instance = await createUnityInstance(canvas, config, function (p) { bar.style.width = Math.round((0.92 + 0.08 * p) * 100) + '%'; });
-    window.unityInstance = instance; wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; }, 700); try { canvas.focus(); } catch (e) { }
-  })().catch(function (err) { fail('The game could not start here: ' + (err && err.message ? err.message : err)); if (window.console) console.error(err); }); }
+    window.unityInstance = instance; try { window.name = ''; } catch (e) { } wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; }, 700); try { canvas.focus(); } catch (e) { }
+  })().catch(function (err) {
+    if (window.console) console.error(err);
+    kept = {};
+    // (a start that broke part-way leaves the game's loader half set up, so a quiet retry starts this page over: the downloads come
+    // straight back out of the browser's cache, so it is quick. window.name survives that and counts the tries)
+    var n = parseInt((/fnasTry(\d)/.exec(window.name || '') || [0, '0'])[1], 10);
+    if (n < 2) { try { window.name = 'fnasTry' + (n + 1); say.textContent = 'One moment…'; setTimeout(function () { location.reload(); }, 600); return; } catch (e) { } }
+    try { window.name = ''; } catch (e) { }
+    fail('The game could not start this time. Tap TRY AGAIN, and it will start fresh.');
+  }); }
   run();
 })();
 </script>

@@ -29,8 +29,10 @@
   :focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 10px; }
   .wrap { max-width: var(--max); margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
 
-  /* --- header --- */
-  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: rgba(11, 11, 11, .82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); transition: box-shadow .3s; }
+  :root { --lift: 0px; } :root.lifted { --lift: 64px; } :root.lifted body { padding-top: var(--lift); }
+  html, body { overscroll-behavior: none; }
+  :root.lifted body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--lift); background: var(--bg); z-index: 11; pointer-events: none; }   /* (a solid strip above the header, so the page never shows scrolling past above it) */
+  .top { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--lift)); z-index: 10; background: rgba(11, 11, 11, .82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); transition: box-shadow .3s; }
   .top.scrolled { box-shadow: 0 10px 30px rgba(0, 0, 0, .55); }
   .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
   .badge { display: inline-flex; background: #000; border-radius: 12px; padding: 9px 13px; text-decoration: none; transition: transform .35s var(--spring); }
@@ -43,7 +45,6 @@
   .nav a:hover::after, .nav a.active::after { transform: scaleX(1); }
   .nav a.active { color: var(--orange); }
 
-  /* --- pages (one shows at a time) --- */
   .page.enter { animation: pageIn .5s var(--ease) both; }
   @keyframes pageIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   .band { padding-block: clamp(56px, 8vw, 100px); }
@@ -57,7 +58,6 @@
   .more:hover { color: var(--orange); }
   .more:hover svg { transform: translateX(5px); }
 
-  /* --- buttons --- */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--display); font-size: clamp(19px, 2vw, 23px); letter-spacing: .05em; line-height: 1; color: var(--on-orange); background: var(--orange); border: 0; border-radius: 999px; padding: 18px 36px; cursor: pointer; text-decoration: none; box-shadow: 0 0 0 0 var(--orange-glow); transition: transform .3s var(--spring), box-shadow .3s, background .2s; -webkit-tap-highlight-color: transparent; }
   .btn svg { width: 22px; height: 22px; transition: transform .3s var(--spring); }
   .btn:hover { transform: translateY(-3px) scale(1.04); background: var(--orange-hi); box-shadow: 0 12px 30px -6px var(--orange-glow); }
@@ -67,7 +67,6 @@
   .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line-2); padding: 12px 22px; font-size: 18px; }
   .btn-ghost:hover { background: transparent; color: var(--orange); border-color: var(--orange); box-shadow: none; }
 
-  /* --- home: the sign --- */
   .hero { text-align: center; padding-block: clamp(48px, 9vw, 110px) clamp(56px, 8vw, 100px); }
   .sign { position: relative; display: inline-block; width: min(700px, 92%); }
   .sign img { width: 100%; height: auto; animation: signIn .9s var(--spring) both; }
@@ -80,7 +79,6 @@
   .hero .btn { animation: rise .6s var(--ease) .5s both; }
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-  /* --- game cards --- */
   .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 28px); }
   .cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: transform .35s var(--spring), border-color .3s, box-shadow .3s; }
@@ -104,7 +102,6 @@
   .card.soon p { color: var(--dim); max-width: 30ch; }
   @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 50% { transform: rotate(9deg); } 75% { transform: rotate(-5deg); } }
 
-  /* --- why play here --- */
   .why-title { font-size: clamp(36px, 5.5vw, 62px); margin-bottom: clamp(26px, 4vw, 40px); }
   .why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 28px); }
   .feature { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 34px 32px 36px; transition: transform .35s var(--spring), border-color .3s; }
@@ -115,15 +112,12 @@
   .feature p { color: var(--soft); }
   @keyframes hop { 0%, 100% { transform: none; } 40% { transform: translateY(-8px) rotate(-8deg); } }
 
-  /* (things further down the page slide up as they come into view; nothing is hidden until the script has checked it is below the fold) */
   .pre { opacity: 0; transform: translateY(26px); }
   .in { opacity: 1; transform: none; transition: opacity .6s var(--ease), transform .7s var(--spring); }
 
-  /* --- about --- */
   .about-copy { display: grid; gap: 18px; max-width: 64ch; }
   .about-copy p { color: var(--soft); font-size: clamp(18px, 2vw, 21px); }
 
-  /* --- a game's own page --- */
   .crumb { display: inline-flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 18px; letter-spacing: .05em; color: var(--soft); text-decoration: none; margin-bottom: 26px; transition: color .2s; }
   .crumb svg { width: 20px; height: 20px; transition: transform .3s var(--spring); }
   .crumb:hover { color: var(--orange); }
@@ -168,7 +162,6 @@
   .box.warn { border-color: rgba(252, 135, 8, .6); background: linear-gradient(180deg, rgba(252, 135, 8, .09), var(--panel) 70%); }
   .box.warn h2 { color: var(--orange); }
 
-  /* --- footer --- */
   .foot { border-top: 1px solid var(--line); padding-block: 56px 44px; }
   .foot-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
   .foot .badge img { height: 54px; }
@@ -176,7 +169,6 @@
   .foot hr { border: 0; border-top: 1px solid var(--line); margin: 34px 0 26px; }
   .legal { color: var(--dim); font-size: 15px; max-width: 110ch; }
 
-  /* --- smaller screens --- */
   @media (max-width: 1060px) {
     .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .cards .card.game:first-child { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
@@ -202,7 +194,24 @@
     .event span { font-size: 15px; }
     .foot-top { flex-direction: column; align-items: flex-start; }
   }
-  /* (while a game is being played: nothing on the page around it moves or blurs, so that the device can give the game all it has) */
+  .player.fill { position: fixed; inset: var(--lift) 0 0 0; z-index: 50; width: auto; max-width: none; aspect-ratio: auto; border: 0; border-radius: 0; }
+  body.filling { overflow: hidden; }
+  body.filling .page { transform: none !important; animation: none !important; filter: none !important; }
+  body.filling .tab, body.filling .top { display: none !important; }
+  .exit { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); z-index: 3; display: none; align-items: center; gap: 6px;
+    font: 15px/1 var(--display); letter-spacing: .05em; color: #fff; background: rgba(0, 0, 0, .62); border: 1px solid rgba(255, 255, 255, .25); border-radius: 999px; padding: 9px 14px; cursor: pointer; opacity: .55; transition: opacity .2s; }
+  .exit:hover, .exit:focus-visible { opacity: 1; }
+  .player.fill .exit, .player:fullscreen .exit { display: inline-flex; }
+  .player:-webkit-full-screen .exit { display: inline-flex; }
+  .fold { display: none; align-items: center; gap: 6px; font: 15px/1 var(--display); letter-spacing: .05em; color: var(--soft); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+  .fold:hover { color: var(--text); border-color: var(--orange); }
+  .playing .fold { display: inline-flex; }
+  .tab { position: fixed; top: calc(env(safe-area-inset-top, 0px) + var(--lift)); left: 50%; transform: translateX(-50%); z-index: 40; display: none; align-items: center; gap: 6px;
+    font: 14px/1 var(--display); letter-spacing: .05em; color: #fff; background: #000; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; padding: 7px 14px; cursor: pointer; }
+  .tab:hover { color: var(--orange); }
+  body.folded .top { display: none; }
+  body.folded .tab { display: inline-flex; }
+  body.folded .player:not(.fill) { width: min(100%, calc((100vh - 40px) * 16 / 9)); margin-inline: auto; }
   .playing .top { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--bg); }
   .playing .twinkle svg, .playing .event img, .playing .btn-play { animation: none; }
   .playing .card, .playing .feature, .playing .btn { transition: none; }
@@ -214,6 +223,7 @@
   }
 </style>
 
+<script>try { if (/\.googleusercontent\.com$/.test(location.hostname) && (navigator.maxTouchPoints > 1 || /iPad|iPhone|Android/.test(navigator.userAgent))) document.documentElement.classList.add('insites'); } catch (e) { }</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -238,8 +248,10 @@
       <a href="#games">GAMES</a>
       <a href="#about">ABOUT</a>
     </nav>
+    <button class="fold" id="fold" type="button" aria-label="Make the header small">&#9650; HIDE</button>
   </div>
 </header>
+<button class="tab" id="tab" type="button" aria-label="Show the header">&#9660; MENU</button>
 
 <main>
   <!-- HOME -->
@@ -308,6 +320,7 @@
           <div><strong>HALLOWEEN EVENT</strong><span>On now until 31 October: pumpkins, candy and three new Halloween guns.</span></div>
         </div>
         <div class="player" id="player">
+          <button class="exit" id="exit" type="button" aria-label="Leave full screen">&#10005; EXIT FULL SCREEN</button>
           <img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@a2d13d36af5e29277896e341b69261feb165e14c/img/seth-cover.webp" alt="" width="710" height="438">
           <div class="ui" id="player-ui">
             <button class="btn btn-play" id="play" type="button"><svg aria-hidden="true"><use href="#i-play"/></svg> PLAY</button>
@@ -385,6 +398,7 @@
         <a class="crumb" href="#games"><svg aria-hidden="true"><use href="#i-back"/></svg> ALL GAMES</a>
         <h1 class="game-title">DIRT DOGS</h1>
         <div class="player" id="dd-player">
+          <button class="exit" id="dd-exit" type="button" aria-label="Leave full screen">&#10005; EXIT FULL SCREEN</button>
           <img src="https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@5f92d95649cc6c28351ab8b3d63dd5f7a2e64167/g/loading.jpg" alt="" width="1672" height="941">
           <div class="ui" id="dd-player-ui">
             <button class="btn btn-play" id="dd-play" type="button"><svg aria-hidden="true"><use href="#i-play"/></svg> PLAY</button>
@@ -473,7 +487,6 @@
 
 <script>
 (function () {
-  // The games, in the order they are shown. A new game: one more entry here (and its own page above).
   var GAMES = [
     /*DD_CARD*/{ id: 'dirt-dogs', title: 'DIRT DOGS', tag: 'RACING', cover: 'https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@5f92d95649cc6c28351ab8b3d63dd5f7a2e64167/g/loading.jpg',
       alt: 'A dirt bike rider mid-air doing a Superman over sunlit hills',
@@ -483,8 +496,6 @@
       blurb: 'A first-person horror game. Survive five nights in the old house at 14 Marrow Lane.' }
   ];
   var SOON = ['A new game is in the works — genre reveal coming soon.', 'Another one is on the way. Watch this space.'];
-  // Where each game's files are (inside this website)
-  // (each game's own folder in this website, and the page in it: '' where the host hands out a folder's index.html by itself)
   var PLAY = { 'five-nights-at-seths': 'https://script.google.com/a/~/macros/s/AKfycbzPVa0gJvZXXI7kxuE_xPJYcW9_WMuBcENPwssqw2SfXc1GpIavh68snY6uihwuJ5gC/exec?g=fnas' }, PAGE = '';
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -508,12 +519,10 @@
   document.querySelectorAll('[data-why]').forEach(function (box) { box.innerHTML = WHY; });
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  // --- October: the Halloween look on Five Nights at Seth's page
   if (new Date().getMonth() === 9) {
     document.getElementById('event').hidden = false;
   }
 
-  // --- pages: one shows at a time, chosen by the part of the address after the #
   var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
   var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
   function route() {
@@ -528,7 +537,7 @@
       if (on) { here = p; p.classList.remove('enter'); void p.offsetWidth; p.classList.add('enter'); }
     });
     var tab = r === 'five-nights-at-seths' || r === 'dirt-dogs' ? 'games' : r;
-    links.forEach(function (a) { var on = a.getAttribute('href') === '#' + tab; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    links.forEach(function (a) { var on = (a.getAttribute('data-go') ? '#' + a.getAttribute('data-go') : a.getAttribute('href')) === '#' + tab; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     if (here) document.title = here.getAttribute('data-title');
     if (!first) { var h = document.documentElement, was = h.style.scrollBehavior; h.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); h.style.scrollBehavior = was; }
     reveal(here);
@@ -539,8 +548,20 @@
     var id = a.getAttribute('href').slice(1); if (!pages.some(function (p) { return p.getAttribute('data-route') === id; })) return;
     e.preventDefault(); window.__route = id; show(false);
   });
+  function unlink() {
+    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+      var id = a.getAttribute('href').slice(1); if (!pages.some(function (p) { return p.getAttribute('data-route') === id; })) return;
+      a.setAttribute('data-go', id); a.removeAttribute('href'); a.setAttribute('role', 'link'); if (!a.hasAttribute('tabindex')) a.tabIndex = 0; a.style.cursor = 'pointer';
+    });
+  }
+  unlink();
+  function go(e) {
+    var a = e.target.closest && e.target.closest('[data-go]'); if (!a) return;
+    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault(); e.stopImmediatePropagation(); window.__route = a.getAttribute('data-go'); show(false);
+  }
+  window.addEventListener('click', go, true); window.addEventListener('keydown', go, true);
 
-  // --- things further down slide up as they come into view (only what starts below the fold is held back)
   var watcher = 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches ? new IntersectionObserver(function (seen) {
     seen.forEach(function (e) {
       if (!e.isIntersecting) return; watcher.unobserve(e.target);
@@ -560,16 +581,13 @@
     });
   }
 
-  // --- the header gets a shadow once the page has moved
   var top = document.getElementById('top');
   window.addEventListener('scroll', function () { top.classList.toggle('scrolled', window.scrollY > 8); }, { passive: true });
 
-  // --- Five Nights at Seth's: the game starts only when PLAY is pressed (it is a big download)
   var player = document.getElementById('player'), ui = document.getElementById('player-ui'), note = document.getElementById('player-note');
   var phone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
   var dir = PLAY['five-nights-at-seths'], src = dir + PAGE, started = false;
   function there() {
-    // (in a preview of this site the game may not be alongside it)
     return Promise.resolve(true);
   }
   function start() {
@@ -577,29 +595,42 @@
     there().then(function (ok) {
       if (!ok) { started = false; note.textContent = 'This is a preview: the game will play here once the website is online.'; return; }
       
-      // (the game page travels inside this one: it is opened here, with this page's own address, so no second Google page is needed —
-      // a second one is what showed Google Drive's error to anyone signed in to a school account, or to none)
       var f = document.createElement('iframe'), held = document.getElementById('fnas-game-src'), html = null;
       try { html = held ? JSON.parse(held.textContent) : null; } catch (e) { html = null; }
-      if (html) f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '"><script>window.__fnasUrl = ' + JSON.stringify(location.href) + ';<\/script>'); else f.src = src;
+      if (html) f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '"><script>window.__fnasUrl = ' + JSON.stringify('https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/') + ';<\/script>'); else f.src = src;
       f.title = "Five Nights at Seth's"; f.allow = 'fullscreen; autoplay; gamepad'; f.setAttribute('allowfullscreen', '');
       ui.remove(); player.appendChild(f); try { f.focus(); } catch (e) { }
-      // while the game is going, the page around it keeps still (nothing else moving or blurring), so that all of the device's
-      // effort goes into the game; and the game is brought into the middle of the window
       document.body.classList.add('playing'); try { player.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { player.scrollIntoView(); }
     });
   }
   document.getElementById('play').addEventListener('click', start);
   var full = document.getElementById('full');
-  if (phone) full.hidden = true;
-  full.addEventListener('click', function () {
-    var go = player.requestFullscreen || player.webkitRequestFullscreen;
-    if (go) { try { var p = go.call(player); if (p && p.catch) p.catch(function () { }); } catch (e) { } }
-    start();
-  });
+  function isFull(pl) { return document.fullscreenElement === pl || document.webkitFullscreenElement === pl; }
+  function fill(pl, on) { pl.classList.toggle('fill', on); document.body.classList.toggle('filling', on); }
+  function enterFull(pl, startIt) {
+    startIt();
+    var go = pl.requestFullscreen || pl.webkitRequestFullscreen, can = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+    if (!go || !can) { fill(pl, true); return; }
+    try { var p = go.call(pl); if (p && p.catch) p.catch(function () { fill(pl, true); }); } catch (e) { fill(pl, true); return; }
+    setTimeout(function () { if (!isFull(pl)) fill(pl, true); }, 600);
+  }
+  function leaveFull(pl) {
+    fill(pl, false);
+    if (isFull(pl)) { var out = document.exitFullscreen || document.webkitExitFullscreen; try { var p = out.call(document); if (p && p.catch) p.catch(function () { }); } catch (e) { } }
+  }
+  window.__mgsFull = { enter: enterFull, leave: leaveFull };
+  full.addEventListener('click', function () { enterFull(player, start); });
+  document.getElementById('exit').addEventListener('click', function (e) { e.stopPropagation(); leaveFull(player); });
+  document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; document.querySelectorAll('.player.fill').forEach(function (pl) { leaveFull(pl); }); });
 
-/*DD_JS*/
-  // --- Dirt Dogs: same as above, its own PLAY button and its own game page carried inside this one
+  function fold(on) {
+    document.body.classList.toggle('folded', on);
+    var pl = document.querySelector('.page:not([hidden]) .player');
+    if (on && pl) { try { pl.scrollIntoView({ block: 'center' }); } catch (e) { } }
+  }
+  document.getElementById('fold').addEventListener('click', function () { fold(true); });
+  document.getElementById('tab').addEventListener('click', function () { fold(false); });
+
   (function () {
     var pl = document.getElementById('dd-player'), pui = document.getElementById('dd-player-ui'), go = false; if (!pl) return;
     function startDD() {
@@ -613,10 +644,9 @@
       document.body.classList.add('playing'); try { pl.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { pl.scrollIntoView(); }
     }
     document.getElementById('dd-play').addEventListener('click', startDD);
-    var fb = document.getElementById('dd-full'); if (phone) fb.hidden = true;
-    fb.addEventListener('click', function () { var g = pl.requestFullscreen || pl.webkitRequestFullscreen; if (g) { try { var q = g.call(pl); if (q && q.catch) q.catch(function () { }); } catch (e) { } } startDD(); });
+    document.getElementById('dd-full').addEventListener('click', function () { window.__mgsFull.enter(pl, startDD); });
+    document.getElementById('dd-exit').addEventListener('click', function (e) { e.stopPropagation(); window.__mgsFull.leave(pl); });
   })();
-/*DD_JS_END*/
 
   show(true);
 })();

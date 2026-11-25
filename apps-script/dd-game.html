@@ -255,7 +255,7 @@ window.ddLiquid = function (cv) {
     await new Promise(function (ok) { if (window.fnasIntro !== 0) return ok(); var tt = setInterval(function () { if (window.fnasIntro !== 0) { clearInterval(tt); ok(); } }, 50); setTimeout(function () { clearInterval(tt); ok(); }, 10000); });
     setWord('Starting'); tube.set(0.92);
     var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: G + 'StreamingAssets', companyName: M.company || 'Midnight Grid Studios', productName: M.product, productVersion: M.version || '1.0',
-      devicePixelRatio: Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.25), matchWebGLToCanvasSize: true,
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75), matchWebGLToCanvasSize: true,
       showBanner: function (msg, type) { if (type === 'error') fail(msg); else if (window.console) console.warn(msg); } };
     var real = window.fetch.bind(window); names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
     window.fetch = function (input, init) {

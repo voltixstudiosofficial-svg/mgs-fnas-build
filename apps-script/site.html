@@ -532,6 +532,7 @@
   }
   function show(first) {
     var r = route(), here = null;
+    (window.__mgsStops || []).forEach(function (f) { try { f(r); } catch (e) { } });
     pages.forEach(function (p) {
       var on = p.getAttribute('data-route') === r; p.hidden = !on;
       if (on) { here = p; p.classList.remove('enter'); void p.offsetWidth; p.classList.add('enter'); }
@@ -586,7 +587,16 @@
 
   var player = document.getElementById('player'), ui = document.getElementById('player-ui'), note = document.getElementById('player-note');
   var phone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
-  var dir = PLAY['five-nights-at-seths'], src = dir + PAGE, started = false;
+  var dir = PLAY['five-nights-at-seths'], src = dir + PAGE, started = false, fnasFrame = null;
+  function stopGame(pl, frame, uiEl) {
+    if (frame && frame.parentNode) { try { frame.src = 'about:blank'; } catch (e) { } frame.remove(); }
+    if (uiEl && !uiEl.parentNode) pl.appendChild(uiEl);
+    pl.classList.remove('fill'); document.body.classList.remove('filling', 'playing', 'folded');
+  }
+  (window.__mgsStops = window.__mgsStops || []).push(function (r) {
+    if (r === 'five-nights-at-seths' || !started) return;
+    stopGame(player, fnasFrame, ui); fnasFrame = null; started = false;
+  });
   function there() {
     return Promise.resolve(true);
   }
@@ -600,6 +610,7 @@
       if (html) f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '"><script>window.__fnasUrl = ' + JSON.stringify('https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/') + ';<\/script>'); else f.src = src;
       f.title = "Five Nights at Seth's"; f.allow = 'fullscreen; autoplay; gamepad'; f.setAttribute('allowfullscreen', '');
       ui.remove(); player.appendChild(f); try { f.focus(); } catch (e) { }
+      fnasFrame = f;
       document.body.classList.add('playing'); try { player.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { player.scrollIntoView(); }
     });
   }
@@ -632,7 +643,13 @@
   document.getElementById('tab').addEventListener('click', function () { fold(false); });
 
   (function () {
-    var pl = document.getElementById('dd-player'), pui = document.getElementById('dd-player-ui'), go = false; if (!pl) return;
+    var pl = document.getElementById('dd-player'), pui = document.getElementById('dd-player-ui'), go = false, ddFrame = null; if (!pl) return;
+    window.__mgsStops.push(function (r) {
+      if (r === 'dirt-dogs' || !go) return;
+      if (ddFrame && ddFrame.parentNode) { try { ddFrame.src = 'about:blank'; } catch (e) { } ddFrame.remove(); }
+      if (!pui.parentNode) pl.appendChild(pui);
+      pl.classList.remove('fill'); document.body.classList.remove('filling', 'playing', 'folded'); ddFrame = null; go = false;
+    });
     function startDD() {
       if (go) return; go = true;
       var f = document.createElement('iframe'), held = document.getElementById('dd-game-src'), html = null;
@@ -641,6 +658,7 @@
       f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '">');
       f.title = 'Dirt Dogs'; f.allow = 'fullscreen; autoplay; gamepad; clipboard-write'; f.setAttribute('allowfullscreen', '');
       pui.remove(); pl.appendChild(f); try { f.focus(); } catch (e) { }
+      ddFrame = f;
       document.body.classList.add('playing'); try { pl.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { pl.scrollIntoView(); }
     }
     document.getElementById('dd-play').addEventListener('click', startDD);

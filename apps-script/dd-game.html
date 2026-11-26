@@ -9,7 +9,7 @@
 @font-face { font-family: "DD Saira"; font-weight: 700; font-display: block; src: url(https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@5084bd52bebbee7128bc8b0b4e20ca9596b5697e/g/saira-Bold.woff2) format("woff2"); }
 @font-face { font-family: "DD Saira"; font-weight: 500; font-display: block; src: url(https://cdn.jsdelivr.net/gh/voltixstudiosofficial-svg/mgs-fnas-build@5084bd52bebbee7128bc8b0b4e20ca9596b5697e/g/saira-Medium.woff2) format("woff2"); }
 /* Days Gone-style loading screen: the key art full-bleed, logo top left, and bottom left a big LOADING, the MB count and a glass
-   tube that fills with purple liquid. One dark look, like the game's menus (black + purple). */
+tube that fills with purple liquid. One dark look, like the game's menus (black + purple). */
 :root { color-scheme: dark; --void: #050407; --ink: #f1ecff; --dim: #a79fbd; --purple: #a974ff; --deep: #5a22c9; --bad: #ff6a5a; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--void); color: var(--ink); overflow: hidden; overscroll-behavior: none; font: 500 16px/1.4 "DD Saira", "Saira Extra Condensed", "Arial Narrow", "Roboto Condensed", Arial, sans-serif; -webkit-text-size-adjust: 100%; }
@@ -35,247 +35,295 @@ body { margin: 0; background: var(--void); color: var(--ink); overflow: hidden; 
 </head>
 <body>
 <div id="stage">
-  <canvas id="unity-canvas" tabindex="-1"></canvas>
-  <div id="wait">
-    <img id="logo" alt="Dirt Dogs" src="">
-    <div id="panel">
-      <div id="row"><div id="say">Loading<i>.</i></div><div id="mb"></div></div>
-      <canvas id="tube"></canvas>
-      <div id="tip"></div>
-      <div id="bad"></div>
-      <button id="again" type="button">TRY AGAIN</button>
-    </div>
-  </div>
+<canvas id="unity-canvas" tabindex="-1"></canvas>
+<div id="wait">
+<img id="logo" alt="Dirt Dogs" src="">
+<div id="panel">
+<div id="row"><div id="say">Loading<i>.</i></div><div id="mb"></div></div>
+<canvas id="tube"></canvas>
+<div id="tip"></div>
+<div id="bad"></div>
+<button id="again" type="button">TRY AGAIN</button>
+</div>
+</div>
 </div>
 <script>document.write('<script src="' + DD_ART + 'studio.js"><\/script>');</script>
-<script>// Dirt Dogs loading bar: a long rounded glass tube with REAL liquid in it (a particle fluid, the double-density-relaxation
-window.ddLiquid = function (cv) {
-  var ctx = cv.getContext('2d'), W = 0, H = 0, R = 1, run = true, last = 0, acc = 0, target = 0, shown = 0;
-  var off = document.createElement('canvas'), octx = off.getContext('2d'), OS = 1, img = null, blob = null;
-  var MAXN = 900, X = new Float32Array(MAXN), Y = new Float32Array(MAXN), PX = new Float32Array(MAXN), PY = new Float32Array(MAXN), VX = new Float32Array(MAXN), VY = new Float32Array(MAXN);
-  var tiltS = 1, Lc = 0, n = 0, sp = 4.5, hR = 10, G, nFull = 400, grid = {}, nb = [], cellOf = new Int32Array(MAXN);
-  function size() {
-    var r = cv.getBoundingClientRect(); R = Math.min(window.devicePixelRatio || 1, 2);
-    W = Math.max(60, r.width); H = Math.max(20, r.height);
-    cv.width = Math.round(W * R); cv.height = Math.round(H * R);
-    var y0 = 4, y1 = H - 4, x0 = 4, x1 = W - 4; G = { x0: x0, x1: x1, y0: y0, y1: y1, hh: y1 - y0, r: (y1 - y0) / 2, cy: (y0 + y1) / 2 };
-    sp = Math.max(3.2, G.hh / 9); hR = sp * 2.3;
-    nFull = Math.min(MAXN, Math.round(0.6 * (G.x1 - G.x0) * G.hh / (sp * sp)));
-    OS = 1; off.width = Math.ceil(W * OS); off.height = Math.ceil(H * OS); img = octx.createImageData(off.width, off.height);
-    var bs = Math.ceil(hR * 1.2 * OS) * 2; blob = document.createElement('canvas'); blob.width = blob.height = bs;
-    var bc = blob.getContext('2d'), gr = bc.createRadialGradient(bs / 2, bs / 2, 0, bs / 2, bs / 2, bs / 2);
-    gr.addColorStop(0, 'rgba(0,0,0,0.85)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); bc.fillStyle = gr; bc.fillRect(0, 0, bs, bs);
-  }
-  size(); window.addEventListener('resize', size);
-
-  function wall(i, rad) {
-    var ax = G.x0 + G.r, bx = G.x1 - G.r, cx = X[i] < ax ? ax : X[i] > bx ? bx : X[i], dx = X[i] - cx, dy = Y[i] - G.cy, d = Math.sqrt(dx * dx + dy * dy), lim = G.r - rad;
-    if (d > lim && d > 1e-6) {
-      var nx = dx / d, ny = dy / d; X[i] = cx + nx * lim; Y[i] = G.cy + ny * lim;
-      var vx = X[i] - PX[i], vy = Y[i] - PY[i], vn = vx * nx + vy * ny;
-      if (vn > 0) { vx -= vn * nx * 1.25; vy -= vn * ny * 1.25; }
-      vx *= 0.985; vy *= 0.985; PX[i] = X[i] - vx; PY[i] = Y[i] - vy; return true;
-    }
-    return false;
-  }
-  function step() {
-    var p = Math.max(target, 0.004), i, j, k;
-    var want = Math.round(nFull * p), L = Math.max(G.hh * 1.2, p * (G.x1 - G.x0));
-    if (Lc < G.hh * 1.2) Lc = G.hh * 1.2; Lc = Math.min(L, Lc + (G.x1 - G.x0) * 0.004); L = Lc; var depth = 2 * (n * sp * sp) / L, tilt = p >= 0.995 ? 0.0 : Math.min(1.1, Math.max(0.02, depth / L));
-    tiltS += (tilt - tiltS) * 0.03;
-    var g = 0.10 * sp / 4.5, gx = -g * tiltS, gy = g;
-    var gap = want - n, rate = gap > 0 ? Math.min(6, 0.5 + gap * 0.05) : 0, sx = G.x0 + G.r * 0.75, sy = G.y0 + sp * 0.8;
-    for (var s = 0; s < rate && n < MAXN; s++) {
-      if (s >= Math.floor(rate) && Math.random() > rate - Math.floor(rate)) break;
-      var w = Math.min(G.hh * 0.35, sp * (0.6 + rate * 0.25));
-      X[n] = sx + (Math.random() - 0.5) * w * 0.6; Y[n] = sy + (Math.random() - 0.5) * w * 0.5;
-      PX[n] = X[n] - (0.5 + rate * 0.07) * sp / 4.5 - Math.random() * 0.3; PY[n] = Y[n] - 0.6 * sp / 4.5; n++;
-    }
-    for (i = 0; i < n; i++) {
-      VX[i] = X[i] - PX[i] + gx; VY[i] = Y[i] - PY[i] + gy;
-      var vv = VX[i] * VX[i] + VY[i] * VY[i], vmax = sp * 1.4; if (vv > vmax * vmax) { var f = vmax / Math.sqrt(vv); VX[i] *= f; VY[i] *= f; }
-      PX[i] = X[i]; PY[i] = Y[i]; X[i] += VX[i]; Y[i] += VY[i];
-    }
-    grid = {}; var cs = hR;
-    for (i = 0; i < n; i++) { var key = ((X[i] / cs) | 0) * 1024 + ((Y[i] / cs) | 0); cellOf[i] = key; (grid[key] || (grid[key] = [])).push(i); }
-    var rho0 = 3.2, kk = 0.09, kn = 0.22;
-    for (i = 0; i < n; i++) {
-      var cx = (X[i] / cs) | 0, cy = (Y[i] / cs) | 0, rho = 0, rhon = 0, m = 0;
-      for (var ax = -1; ax <= 1; ax++) for (var ay = -1; ay <= 1; ay++) {
-        var c = grid[(cx + ax) * 1024 + cy + ay]; if (!c) continue;
-        for (k = 0; k < c.length; k++) { j = c[k]; if (j === i) continue; var dx = X[j] - X[i], dy = Y[j] - Y[i], d2 = dx * dx + dy * dy; if (d2 < hR * hR) { var q = 1 - Math.sqrt(d2) / hR; rho += q * q; rhon += q * q * q; nb[m++] = j; } }
-      }
-      var P = kk * (rho - rho0), Pn = kn * rhon, ddx = 0, ddy = 0;
-      for (k = 0; k < m; k++) {
-        j = nb[k]; var ex = X[j] - X[i], ey = Y[j] - Y[i], d = Math.sqrt(ex * ex + ey * ey) || 1e-4, q2 = 1 - d / hR;
-        var D = (P * q2 + Pn * q2 * q2) * 0.5 * sp, ux = ex / d * D, uy = ey / d * D;
-        X[j] += ux; Y[j] += uy; ddx -= ux; ddy -= uy;
-      }
-      X[i] += ddx; Y[i] += ddy;
-    }
-    for (i = 0; i < n; i++) wall(i, sp * 0.45);
-  }
-  function draw() {
-    octx.clearRect(0, 0, off.width, off.height);
-    var bs = blob.width, hb = bs / 2;
-    for (var i = 0; i < n; i++) octx.drawImage(blob, X[i] * OS - hb, Y[i] * OS - hb);
-    var src = octx.getImageData(0, 0, off.width, off.height).data, d = img.data, ow = off.width, oh = off.height;
-    for (var y = 0; y < oh; y++) {
-      var fy = y / oh, r = 190 - 120 * fy, g = 140 - 110 * fy, b = 255 - 85 * fy;
-      for (var x = 0; x < ow; x++) {
-        var o = (y * ow + x) * 4, a = src[o + 3];
-        if (a < 70) { d[o + 3] = 0; continue; }
-        var e = a < 110 ? (a - 70) / 40 : 1;                 // soft edge
-        d[o] = r; d[o + 1] = g; d[o + 2] = b; d[o + 3] = 255 * e;
-      }
-    }
-    octx.putImageData(img, 0, 0);
-    ctx.setTransform(R, 0, 0, R, 0, 0); ctx.clearRect(0, 0, W, H);
-    pill(1, 1, W - 2, H - 2); ctx.fillStyle = 'rgba(10,7,18,0.66)'; ctx.fill();
-    ctx.save(); pill(G.x0, G.y0, G.x1 - G.x0, G.hh); ctx.clip();
-    ctx.imageSmoothingEnabled = true; ctx.drawImage(off, 0, 0, W, H);
-    var hl = ctx.createLinearGradient(0, G.y0, 0, G.y0 + G.hh * 0.5); hl.addColorStop(0, 'rgba(255,255,255,0.16)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = hl; ctx.fillRect(G.x0, G.y0, G.x1 - G.x0, G.hh * 0.5);
-    ctx.restore();
-    pill(1, 1, W - 2, H - 2); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(241,236,255,0.9)'; ctx.stroke();
-  }
-  function pill(x, y, w, h) { var r = h / 2; ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2); ctx.lineTo(x + r, y + h); ctx.arc(x + r, y + r, r, Math.PI / 2, Math.PI * 1.5); ctx.closePath(); }
-  function frame(now) {
-    if (!run) return;
-    if (window.fnasIntro === 0) { last = 0; requestAnimationFrame(frame); return; }   // (the studio sign is playing over it: leave it every spare moment)
-    var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now; acc += dt;
-    var steps = 0; while (acc > 1 / 90 && steps < 4) { step(); acc -= 1 / 90; steps++; } if (steps >= 4) acc = 0;
-    draw(); requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-  return {
-    set: function (p) { target = Math.max(target, Math.min(1, p)); },
-    stop: function () { run = false; window.removeEventListener('resize', size); }
-  };
+<script>// Dirt Dogs loading bar: a long rounded glass tube with real liquid in it (a particle fluid). Liquid pours in at the top of the
+(function () {
+function engine(cv, newCanvas, post) {
+var ctx = cv.getContext('2d'), W = 60, H = 20, R = 1, run = true, paused = false, last = 0, acc = 0;
+var real = 0, shown = 0, creepFrom = 0, creepTo = 0, creepT = 0, creepTau = 0, creepOn = false, finishing = false, fullT = 0, told = false, now0 = 0;
+var off = null, octx = null, img = null, blob = null;
+var MAXN = 900, X = new Float32Array(MAXN), Y = new Float32Array(MAXN), PX = new Float32Array(MAXN), PY = new Float32Array(MAXN), VX = new Float32Array(MAXN), VY = new Float32Array(MAXN);
+var tiltS = 1, Lc = 0, n = 0, sp = 4.5, hR = 10, G, nFull = 400, grid = {}, nb = [];
+function size(w, h, r) {
+W = Math.max(60, w); H = Math.max(20, h); R = r;
+cv.width = Math.round(W * R); cv.height = Math.round(H * R);
+var y0 = 4, y1 = H - 4, x0 = 4, x1 = W - 4; G = { x0: x0, x1: x1, y0: y0, y1: y1, hh: y1 - y0, r: (y1 - y0) / 2, cy: (y0 + y1) / 2 };
+sp = Math.max(3.2, G.hh / 9); hR = sp * 2.3;
+nFull = Math.min(MAXN, Math.round(0.6 * (G.x1 - G.x0) * G.hh / (sp * sp)));
+off = newCanvas(Math.ceil(W), Math.ceil(H)); octx = off.getContext('2d', { willReadFrequently: true }); img = octx.createImageData(off.width, off.height);
+var bs = Math.ceil(hR * 1.2) * 2; blob = newCanvas(bs, bs);
+var bc = blob.getContext('2d'), gr = bc.createRadialGradient(bs / 2, bs / 2, 0, bs / 2, bs / 2, bs / 2);
+gr.addColorStop(0, 'rgba(0,0,0,0.85)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); bc.fillStyle = gr; bc.fillRect(0, 0, bs, bs);
+}
+function wall(i, rad) {
+var ax = G.x0 + G.r, bx = G.x1 - G.r, cx = X[i] < ax ? ax : X[i] > bx ? bx : X[i], dx = X[i] - cx, dy = Y[i] - G.cy, d = Math.sqrt(dx * dx + dy * dy), lim = G.r - rad;
+if (d > lim && d > 1e-6) {
+var nx = dx / d, ny = dy / d; X[i] = cx + nx * lim; Y[i] = G.cy + ny * lim;
+var vx = X[i] - PX[i], vy = Y[i] - PY[i], vn = vx * nx + vy * ny;
+if (vn > 0) { vx -= vn * nx * 1.25; vy -= vn * ny * 1.25; }
+vx *= 0.985; vy *= 0.985; PX[i] = X[i] - vx; PY[i] = Y[i] - vy;
+}
+}
+function pace(dt) {
+var goal = real;
+if (creepOn) { creepT += dt; goal = Math.max(goal, creepTo - (creepTo - creepFrom) * Math.exp(-creepT / creepTau)); }
+if (finishing) goal = 1;
+var gap = goal - shown;
+if (gap > 0) shown = Math.min(goal, shown + Math.min(0.32, 0.03 + gap * 1.6) * dt);   // at most about a third of the bar a second
+if (finishing && shown >= 0.999 && n >= nFull - 2) { fullT += dt; if (fullT > 0.7 && !told) { told = true; post('full'); } }
+}
+function step() {
+var p = Math.max(shown, 0.004), i, j, k;
+var want = Math.round(nFull * p), L = Math.max(G.hh * 1.2, p * (G.x1 - G.x0));
+if (Lc < G.hh * 1.2) Lc = G.hh * 1.2; Lc = Math.min(L, Lc + (G.x1 - G.x0) * 0.004); L = Lc;
+var depth = 2 * (n * sp * sp) / L, tilt = p >= 0.995 ? 0.0 : Math.min(1.1, Math.max(0.02, depth / L));
+tiltS += (tilt - tiltS) * 0.03;
+var g = 0.10 * sp / 4.5, gx = -g * tiltS, gy = g;
+var gap = want - n, rate = gap > 0 ? Math.min(6, 0.5 + gap * 0.05) : 0, sx = G.x0 + G.r * 0.75, sy = G.y0 + sp * 0.8;
+for (var s = 0; s < rate && n < MAXN; s++) {
+if (s >= Math.floor(rate) && Math.random() > rate - Math.floor(rate)) break;
+var w = Math.min(G.hh * 0.35, sp * (0.6 + rate * 0.25));
+X[n] = sx + (Math.random() - 0.5) * w * 0.6; Y[n] = sy + (Math.random() - 0.5) * w * 0.5;
+PX[n] = X[n] - (0.5 + rate * 0.07) * sp / 4.5 - Math.random() * 0.3; PY[n] = Y[n] - 0.6 * sp / 4.5; n++;
+}
+for (i = 0; i < n; i++) {
+VX[i] = X[i] - PX[i] + gx; VY[i] = Y[i] - PY[i] + gy;
+var vv = VX[i] * VX[i] + VY[i] * VY[i], vmax = sp * 1.4; if (vv > vmax * vmax) { var f = vmax / Math.sqrt(vv); VX[i] *= f; VY[i] *= f; }
+PX[i] = X[i]; PY[i] = Y[i]; X[i] += VX[i]; Y[i] += VY[i];
+}
+grid = {}; var cs = hR;
+for (i = 0; i < n; i++) { var key = ((X[i] / cs) | 0) * 1024 + ((Y[i] / cs) | 0); (grid[key] || (grid[key] = [])).push(i); }
+var rho0 = 3.2, kk = 0.09, kn = 0.22;
+for (i = 0; i < n; i++) {
+var cx = (X[i] / cs) | 0, cy = (Y[i] / cs) | 0, rho = 0, rhon = 0, m = 0;
+for (var ax = -1; ax <= 1; ax++) for (var ay = -1; ay <= 1; ay++) {
+var c = grid[(cx + ax) * 1024 + cy + ay]; if (!c) continue;
+for (k = 0; k < c.length; k++) { j = c[k]; if (j === i) continue; var dx = X[j] - X[i], dy = Y[j] - Y[i], d2 = dx * dx + dy * dy; if (d2 < hR * hR) { var q = 1 - Math.sqrt(d2) / hR; rho += q * q; rhon += q * q * q; nb[m++] = j; } }
+}
+var P = kk * (rho - rho0), Pn = kn * rhon, ddx = 0, ddy = 0;
+for (k = 0; k < m; k++) {
+j = nb[k]; var ex = X[j] - X[i], ey = Y[j] - Y[i], d = Math.sqrt(ex * ex + ey * ey) || 1e-4, q2 = 1 - d / hR;
+var D = (P * q2 + Pn * q2 * q2) * 0.5 * sp, ux = ex / d * D, uy = ey / d * D;
+X[j] += ux; Y[j] += uy; ddx -= ux; ddy -= uy;
+}
+X[i] += ddx; Y[i] += ddy;
+}
+for (i = 0; i < n; i++) wall(i, sp * 0.45);
+}
+function pill(x, y, w, h) { var r = h / 2; ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2); ctx.lineTo(x + r, y + h); ctx.arc(x + r, y + r, r, Math.PI / 2, Math.PI * 1.5); ctx.closePath(); }
+function draw() {
+octx.clearRect(0, 0, off.width, off.height);
+var bs = blob.width, hb = bs / 2;
+for (var i = 0; i < n; i++) octx.drawImage(blob, X[i] - hb, Y[i] - hb);
+var src = octx.getImageData(0, 0, off.width, off.height).data, d = img.data, ow = off.width, oh = off.height;
+for (var y = 0; y < oh; y++) {
+var fy = y / oh, r = 190 - 120 * fy, g = 140 - 110 * fy, b = 255 - 85 * fy;
+for (var x = 0; x < ow; x++) {
+var o = (y * ow + x) * 4, a = src[o + 3];
+if (a < 70) { d[o + 3] = 0; continue; }
+var e = a < 110 ? (a - 70) / 40 : 1;
+d[o] = r; d[o + 1] = g; d[o + 2] = b; d[o + 3] = 255 * e;
+}
+}
+octx.putImageData(img, 0, 0);
+ctx.setTransform(R, 0, 0, R, 0, 0); ctx.clearRect(0, 0, W, H);
+pill(1, 1, W - 2, H - 2); ctx.fillStyle = 'rgba(10,7,18,0.66)'; ctx.fill();
+ctx.save(); pill(G.x0, G.y0, G.x1 - G.x0, G.hh); ctx.clip();
+ctx.imageSmoothingEnabled = true; ctx.drawImage(off, 0, 0, W, H);
+var hl = ctx.createLinearGradient(0, G.y0, 0, G.y0 + G.hh * 0.5); hl.addColorStop(0, 'rgba(255,255,255,0.16)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+ctx.fillStyle = hl; ctx.fillRect(G.x0, G.y0, G.x1 - G.x0, G.hh * 0.5);
+ctx.restore();
+pill(1, 1, W - 2, H - 2); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(241,236,255,0.9)'; ctx.stroke();
+}
+var raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : function (f) { return setTimeout(function () { f(Date.now()); }, 16); };
+var clock = typeof performance !== 'undefined' ? function () { return performance.now(); } : Date.now;
+function frame() {
+if (!run) return;
+if (!G) { raf(frame); return; }
+var t = clock();
+if (paused) { last = 0; raf(frame); return; }
+var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016; last = t; acc += dt;
+pace(dt);
+var steps = 0; while (acc > 1 / 90 && steps < 4) { step(); acc -= 1 / 90; steps++; } if (steps >= 4) acc = 0;
+draw(); raf(frame);
+}
+raf(frame);
+return function (m) {
+if (m.size) size(m.size[0], m.size[1], m.size[2]);
+if (m.p !== undefined) real = Math.max(real, Math.min(1, m.p));
+if (m.creep) { creepOn = true; creepFrom = Math.max(real, shown); creepTo = m.creep[0]; creepTau = m.creep[1]; creepT = 0; }
+if (m.pause !== undefined) paused = m.pause;
+if (m.finish) finishing = true;
+if (m.stop) run = false;
 };
+}
+
+window.ddLiquid = function (cv) {
+var r0 = cv.getBoundingClientRect(), sz = function () { var r = cv.getBoundingClientRect(); return [r.width, r.height, Math.min(window.devicePixelRatio || 1, 2)]; };
+var send, onFull = null, worker = null;
+function heard(m) { if (m === 'full' && onFull) { var f = onFull; onFull = null; f(); } }
+try {
+if (cv.transferControlToOffscreen && typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined') {
+var src = 'var api = null, eng = ' + engine.toString() + ';\n' +
+'onmessage = function (e) { var m = e.data; if (m.canvas) { api = eng(m.canvas, function (w, h) { return new OffscreenCanvas(w, h); }, function (x) { postMessage(x); }); } if (api) api(m); };';
+worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+var oc = cv.transferControlToOffscreen();
+worker.onmessage = function (e) { heard(e.data); };
+worker.postMessage({ canvas: oc, size: sz() }, [oc]);
+send = function (m) { worker.postMessage(m); };
+}
+} catch (e) { worker = null; }
+if (!worker) {
+var api = engine(cv, function (w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }, heard);
+api({ size: sz() }); send = api;
+}
+function rs() { send({ size: sz() }); }
+window.addEventListener('resize', rs);
+return {
+set: function (p) { send({ p: p }); },
+creep: function (to, secs) { send({ creep: [to, secs] }); },
+pause: function (on) { send({ pause: !!on }); },
+finish: function (cb) { onFull = cb; send({ finish: true }); setTimeout(function () { heard('full'); }, 9000); },   // (never wait forever)
+stop: function () { send({ stop: true }); window.removeEventListener('resize', rs); if (worker) setTimeout(function () { worker.terminate(); }, 50); }
+};
+};
+})();
 </script>
 <script>
 (function () {
-  var M = {"product":"Dirt Dogs","company":"Midnight Grid Studios","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":69267561,"parts":[14680064,2097394],"kind":"desktop"},{"name":"code","id":"v","type":"application/wasm","size":69267561,"parts":[14680064,2097394],"kind":"mobile"},{"name":"data","id":"d","type":"application/octet-stream","size":49167129,"parts":[14680064,14680064,7142151],"kind":"desktop"},{"name":"data","id":"m","type":"application/octet-stream","size":49167129,"parts":[14680064,14680064,7142150],"kind":"mobile"}],"x":174977755,"b":174977755};
-  var canvas = document.getElementById('unity-canvas'), wait = document.getElementById('wait'), say = document.getElementById('say'), mb = document.getElementById('mb'),
-      tip = document.getElementById('tip'), bad = document.getElementById('bad'), again = document.getElementById('again'), tubeC = document.getElementById('tube');
-  wait.style.backgroundImage = 'url(' + DD_ART + 'loading.jpg)'; document.getElementById('logo').src = DD_ART + 'logo.webp';
-  if (window.fnasStudio) window.fnasStudio(DD_ART, document.getElementById('stage'));
-  var tube = window.ddLiquid(tubeC); window.__ddTube = tube;
-  var dotN = 0, dots = setInterval(function () { dotN = (dotN + 1) % 4; var d = say.querySelector('i'); if (d) d.textContent = '...'.slice(0, dotN) || ' '; }, 420);
-  var TIPS = ['Hold <b>F</b> + a direction in the air for tricks', 'Lean back with <b>Shift</b> to wheelie, <b>Ctrl</b> to tip the nose down', 'Stack a flip on top of a held trick for a <b>combo</b>',
-    'Ram a rider harder than they ram you to knock them off', '<b>X</b> locks the back brake to slide round corners', 'Ride through the bushes, they will not hurt you', 'Host a game in <b>Multiplayer</b> and send your mate the code'];
-  var tipI = Math.floor(Math.random() * TIPS.length); function nextTip() { tip.style.opacity = 0; setTimeout(function () { tip.innerHTML = TIPS[tipI++ % TIPS.length]; tip.style.opacity = 1; }, 450); }
-  nextTip(); var tips = setInterval(nextTip, 5200);
-  function setWord(w) { say.innerHTML = w + '<i> </i>'; }
-  function fail(msg) { bad.textContent = msg; bad.style.display = 'block'; again.style.display = 'block'; tubeC.style.display = 'none'; tip.style.display = 'none'; mb.textContent = ''; setWord('Oops'); }
-  again.addEventListener('click', function () { try { window.name = ''; } catch (e) { } location.reload(); });
-  function done() { tube.set(1); clearInterval(dots); clearInterval(tips); setTimeout(function () { wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; tube.stop(); }, 800); }, 650); try { canvas.focus(); } catch (e) { } }
-  ['gesturestart', 'gesturechange', 'gestureend', 'contextmenu'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
-  canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+var M = {"product":"Dirt Dogs","company":"Midnight Grid Studios","version":"1.0","mode":"fetch","sets":[{"name":"code","id":"w","type":"application/wasm","size":69267561,"parts":[14680064,2097394],"kind":"desktop"},{"name":"code","id":"v","type":"application/wasm","size":69267561,"parts":[14680064,2097394],"kind":"mobile"},{"name":"data","id":"d","type":"application/octet-stream","size":49167129,"parts":[14680064,14680064,7142151],"kind":"desktop"},{"name":"data","id":"m","type":"application/octet-stream","size":49167129,"parts":[14680064,14680064,7142150],"kind":"mobile"}],"x":174977755,"b":174977755};
+var canvas = document.getElementById('unity-canvas'), wait = document.getElementById('wait'), say = document.getElementById('say'), mb = document.getElementById('mb'),
+tip = document.getElementById('tip'), bad = document.getElementById('bad'), again = document.getElementById('again'), tubeC = document.getElementById('tube');
+wait.style.backgroundImage = 'url(' + DD_ART + 'loading.jpg)'; document.getElementById('logo').src = DD_ART + 'logo.webp';
+if (window.fnasStudio) window.fnasStudio(DD_ART, document.getElementById('stage'));
+var tube = window.ddLiquid(tubeC); window.__ddTube = tube;
+var introWatch = setInterval(function () { var on = window.fnasIntro === 0; tube.pause(on); if (!on) clearInterval(introWatch); }, 100);
+var dotN = 0, dots = setInterval(function () { dotN = (dotN + 1) % 4; var d = say.querySelector('i'); if (d) d.textContent = '...'.slice(0, dotN) || ' '; }, 420);
+var TIPS = ['Hold <b>F</b> + a direction in the air for tricks', 'Lean back with <b>Shift</b> to wheelie, <b>Ctrl</b> to tip the nose down', 'Stack a flip on top of a held trick for a <b>combo</b>',
+'Ram a rider harder than they ram you to knock them off', '<b>X</b> locks the back brake to slide round corners', 'Ride through the bushes, they will not hurt you', 'Host a game in <b>Multiplayer</b> and send your mate the code'];
+var tipI = Math.floor(Math.random() * TIPS.length); function nextTip() { tip.style.opacity = 0; setTimeout(function () { tip.innerHTML = TIPS[tipI++ % TIPS.length]; tip.style.opacity = 1; }, 450); }
+nextTip(); var tips = setInterval(nextTip, 5200);
+function setWord(w) { say.innerHTML = w + '<i> </i>'; }
+function fail(msg) { bad.textContent = msg; bad.style.display = 'block'; again.style.display = 'block'; tubeC.style.display = 'none'; tip.style.display = 'none'; mb.textContent = ''; setWord('Oops'); }
+again.addEventListener('click', function () { try { window.name = ''; } catch (e) { } location.reload(); });
+function done() { tube.finish(function () { clearInterval(dots); clearInterval(tips); mb.innerHTML = '<b>100%</b>'; wait.className = 'gone'; setTimeout(function () { wait.style.display = 'none'; tube.stop(); }, 800); }); try { canvas.focus(); } catch (e) { } }
+['gesturestart', 'gesturechange', 'gestureend', 'contextmenu'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
+canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
 
-  if (!M && window.__ddDemo) {
-    var tot = 186, g0 = 0, sp = 6; mb.innerHTML = '<b>0</b> / ' + tot + ' MB';
-    var dm = setInterval(function () { if (Math.random() < 0.06) sp = Math.random() < 0.25 ? 45 + Math.random() * 30 : 1 + Math.random() * 7; else if (sp > 20 && Math.random() < 0.3) sp = 3; g0 = Math.min(tot, g0 + sp * 0.1); tube.set(g0 / tot * 0.9); mb.innerHTML = '<b>' + Math.round(g0) + '</b> / ' + tot + ' MB';
-      if (g0 >= tot) { clearInterval(dm); setWord('Starting'); var q = 0.9, s2 = setInterval(function () { q += 0.01; tube.set(q); if (q >= 1) { clearInterval(s2); if (!window.__ddDemoHold) done(); } }, 120); } }, 100);
-    return;
-  }
-  if (!M) { fail('The game has not been put here yet.'); return; }
-  var probe = document.createElement('canvas'), gl = null; try { gl = probe.getContext('webgl2'); } catch (e) { }
-  if (!gl) { fail('This browser cannot draw the game (it needs WebGL 2). Try a newer browser or another device.'); return; }
-  if (typeof DecompressionStream === 'undefined' || typeof WebAssembly === 'undefined') { fail('This browser is too old to run the game. Try a newer one.'); return; }
+if (!M && window.__ddDemo) {
+var tot = window.__ddTot || 186, g0 = 0, sp = 6; mb.innerHTML = '<b>0</b> / ' + tot + ' MB';
+var dm = setInterval(function () { if (Math.random() < 0.06) sp = Math.random() < 0.25 ? 45 + Math.random() * 30 : 1 + Math.random() * 7; else if (sp > 20 && Math.random() < 0.3) sp = 3; g0 = Math.min(tot, g0 + sp * 0.1); tube.set(g0 / tot * 0.85); mb.innerHTML = '<b>' + Math.round(g0) + '</b> / ' + tot + ' MB';
+if (g0 >= tot) { clearInterval(dm); setWord('Starting'); tube.creep(0.97, 6); var q = 0.9, s2 = setInterval(function () { q += 0.01; if (q >= 1) { clearInterval(s2); if (!window.__ddDemoHold) done(); } }, 120); } }, 100);
+return;
+}
+if (!M) { fail('The game has not been put here yet.'); return; }
+var probe = document.createElement('canvas'), gl = null; try { gl = probe.getContext('webgl2'); } catch (e) { }
+if (!gl) { fail('This browser cannot draw the game (it needs WebGL 2). Try a newer browser or another device.'); return; }
+if (typeof DecompressionStream === 'undefined' || typeof WebAssembly === 'undefined') { fail('This browser is too old to run the game. Try a newer one.'); return; }
 
-  var kind = (gl.getExtension('WEBGL_compressed_texture_s3tc') || !gl.getExtension('WEBGL_compressed_texture_astc')) ? 'desktop' : 'mobile';
-  var mobile = kind === 'mobile' || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
-  var GS = [].concat(DD_CDN[kind]), G = GS[0];
-  var ver = typeof M.b === 'number' ? M.b : (typeof M.x === 'number' ? (M.x >>> 0) : (M.version || '1')), VQ = '?v=' + ver;
-  function partUrl(set, i) { return GS[set.at ? set.at[i] : 0] + set.id + i + '.wasm' + VQ; }
-  var sets = M.sets.filter(function (s) { return !s.kind || s.kind === kind; }), frameworkUrl = G + 'framework.js' + VQ;
-  var got = 0, total = 0; sets.forEach(function (s) { s.parts.forEach(function (n) { total += n; }); });
-  var lastPaint = 0;
-  function show(force) {
-    if (!force && performance.now() - lastPaint < 80) return;
-    lastPaint = performance.now(); var p = total ? got / total : 0;
-    tube.set(p * 0.9); mb.innerHTML = '<b>' + Math.round(got / 1048576) + '</b> / ' + Math.round(total / 1048576) + ' MB';
-  }
-  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-  var kept = {}, HOSTS = ['cdn.jsdelivr.net', 'cdn.jsdelivr.net', 'fastly.jsdelivr.net', 'cdn.jsdelivr.net', 'gcore.jsdelivr.net'];
-  function via(url, attempt) { var h = HOSTS[attempt % HOSTS.length]; return h === 'cdn.jsdelivr.net' ? url : url.replace('//cdn.jsdelivr.net/', '//' + h + '/'); }
-  async function piece(url, size) {
-    if (kept[url]) { got += kept[url].size; show(); return kept[url]; }
-    for (var attempt = 0; ; attempt++) {
-      var mine = 0, ac = typeof AbortController !== 'undefined' ? new AbortController() : null, last = Date.now(), dog = null;
-      try {
-        if (ac) dog = setInterval(function () { if (Date.now() - last > (mine ? 12000 : 20000)) ac.abort(); }, 1000);
-        var r = await fetch(via(url, attempt), { cache: attempt ? 'reload' : 'default', signal: ac ? ac.signal : undefined }); if (!r.ok) throw new Error('could not fetch ' + url + ' (' + r.status + ')');
-        var blob;
-        if (!r.body || !r.body.getReader) { var all = await r.arrayBuffer(); mine = all.byteLength; got += mine; show(); blob = new Blob([all]); }
-        else { var reader = r.body.getReader(), chunks = []; for (;;) { var st = await reader.read(); last = Date.now(); if (st.done) break; chunks.push(st.value); mine += st.value.length; got += st.value.length; show(); } blob = new Blob(chunks); }
-        if (size && (blob.size < size || blob.size > size + 32)) throw new Error('a piece came back the wrong size');
-        return (kept[url] = blob);
-      } catch (e) { got -= mine; show(); if (attempt >= 11) throw e; await sleep(Math.min(6000, 800 * Math.pow(2, attempt))); }
-      finally { if (dog) clearInterval(dog); }
-    }
-  }
-  function warm(urls) { urls.forEach(function (u) { try { fetch(u, { method: 'HEAD', cache: 'no-store', mode: 'cors' }).catch(function () { }); } catch (e) { } }); }
-  async function script(url) {
-    for (var attempt = 0; ; attempt++) {
-      try { await new Promise(function (ok, no) { var s = document.createElement('script'), t = setTimeout(function () { s.remove(); no(new Error('the loader did not arrive')); }, 25000);
-          s.src = via(url, attempt) + (attempt ? '&r=' + attempt : ''); s.onload = function () { clearTimeout(t); ok(); }; s.onerror = function () { clearTimeout(t); s.remove(); no(new Error('the loader did not arrive')); }; document.body.appendChild(s); }); return; }
-      catch (e) { if (attempt >= 5) throw e; await sleep(1000 * (attempt + 1)); }
-    }
-  }
-  async function bare(blob, size, s) {
-    var h = new Uint8Array(await blob.slice(0, 24).arrayBuffer()), i = 9; if (h[0] !== 0 || h[1] !== 97 || h[2] !== 115 || h[3] !== 109 || h[8] !== 0) throw new Error('a piece arrived changed');
-    while (h[i] & 0x80) i++; i++; i += 1 + h[i];
-    if (blob.size - i !== size) throw new Error('a piece did not arrive whole');
-    if (s === undefined) return blob.slice(i);
-    var buf = await blob.slice(i).arrayBuffer(), n = buf.byteLength >> 2, w = new Uint32Array(buf, 0, n), k, x;
-    for (k = 0; k <= n; k++) { x = (Math.imul(k, 0x9E3779B1) + s) | 0; x ^= x >>> 15; x = Math.imul(x, 0x85EBCA77); x ^= x >>> 13; x = Math.imul(x, 0xC2B2AE3D); x ^= x >>> 16;
-      if (k < n) w[k] ^= x; else { var b = new Uint8Array(buf, n * 4); for (var j = 0; j < b.length; j++) b[j] ^= (x >>> (8 * j)) & 255; } }
-    return new Blob([buf]);
-  }
-  function seedOf(id, i) { return (M.x ^ Math.imul(id.charCodeAt(0), 0x01000193) ^ Math.imul(i + 1, 0x27D4EB2F)) | 0; }
-  async function whole(set) { for (var tries = 0; ; tries++) { try { return await wholeOnce(set); } catch (e) { set.parts.forEach(function (n, i) { delete kept[partUrl(set, i)]; }); if (tries >= 3) throw e; await sleep(700 * (tries + 1)); } } }
-  async function wholeOnce(set) {
-    var blobs = new Array(set.parts.length), next = 0;
-    async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(partUrl(set, i), set.parts[i]), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
-    await Promise.all([worker(), worker(), worker()]);
-    if (set.name === 'data') setWord('Unpacking');
-    var unpacked = await new Response(new Blob(blobs).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
-    if (unpacked.size !== set.size) throw new Error('a file did not arrive whole');
-    if (set.name === 'code') return { buf: await unpacked.arrayBuffer(), type: set.type, size: set.size };
-    var out = new Blob([unpacked], { type: set.type }); await out.slice(0, 16).arrayBuffer(); return out;
-  }
-  function run() { got = 0; return (async function () {
-    show(true);
-    var all = [G + 'loader.js' + VQ, frameworkUrl]; sets.forEach(function (st) { st.parts.forEach(function (n, i) { all.push(partUrl(st, i)); }); }); warm(all);
-    var files = {}, names = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
-    show(true);
-    await new Promise(function (ok) { if (window.fnasIntro !== 0) return ok(); var tt = setInterval(function () { if (window.fnasIntro !== 0) { clearInterval(tt); ok(); } }, 50); setTimeout(function () { clearInterval(tt); ok(); }, 10000); });
-    setWord('Starting'); tube.set(0.92);
-    var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: G + 'StreamingAssets', companyName: M.company || 'Midnight Grid Studios', productName: M.product, productVersion: M.version || '1.0',
-      devicePixelRatio: Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75), matchWebGLToCanvasSize: true,
-      showBanner: function (msg, type) { if (type === 'error') fail(msg); else if (window.console) console.warn(msg); } };
-    var real = window.fetch.bind(window); names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
-    window.fetch = function (input, init) {
-      var u = typeof input === 'string' ? input : input && input.url ? input.url : String(input);
-      for (var k in names) if (u.length >= k.length && u.substr(u.length - k.length) === k) { var f = names[k]; return Promise.resolve(new Response(f.buf ? f.buf.slice(0) : f, { status: 200, headers: { 'Content-Type': f.type, 'Content-Length': String(f.size) } })); }
-      return real(input, init);
-    };
-    config.dataUrl = 'g/whole.data'; config.codeUrl = 'g/whole.wasm';
-    if (typeof createUnityInstance === 'undefined') await script(G + 'loader.js' + VQ);
-    var instance = await createUnityInstance(canvas, config, function (p) { tube.set(0.92 + 0.08 * p); });
-    window.unityInstance = instance; try { window.name = ''; } catch (e) { }
-    kept = {}; names = {}; files = null; done();
-  })().catch(function (err) {
-    if (window.console) console.error(err); kept = {};
-    var n = parseInt((/ddTry(\d)/.exec(window.name || '') || [0, '0'])[1], 10);
-    if (n < 2) { try { window.name = 'ddTry' + (n + 1); setWord('One moment'); setTimeout(function () { location.reload(); }, 600); return; } catch (e) { } }
-    try { window.name = ''; } catch (e) { }
-    fail('The game could not start this time. Tap TRY AGAIN and it will start fresh.');
-  }); }
-  run();
+var kind = (gl.getExtension('WEBGL_compressed_texture_s3tc') || !gl.getExtension('WEBGL_compressed_texture_astc')) ? 'desktop' : 'mobile';
+var mobile = kind === 'mobile' || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+var GS = [].concat(DD_CDN[kind]), G = GS[0];
+var ver = typeof M.b === 'number' ? M.b : (typeof M.x === 'number' ? (M.x >>> 0) : (M.version || '1')), VQ = '?v=' + ver;
+function partUrl(set, i) { return GS[set.at ? set.at[i] : 0] + set.id + i + '.wasm' + VQ; }
+var sets = M.sets.filter(function (s) { return !s.kind || s.kind === kind; }), frameworkUrl = G + 'framework.js' + VQ;
+var got = 0, total = 0; sets.forEach(function (s) { s.parts.forEach(function (n) { total += n; }); });
+var lastPaint = 0;
+function show(force) {
+if (!force && performance.now() - lastPaint < 80) return;
+lastPaint = performance.now(); var p = total ? got / total : 0;
+tube.set(p * 0.85); mb.innerHTML = '<b>' + Math.round(got / 1048576) + '</b> / ' + Math.round(total / 1048576) + ' MB';
+}
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+var kept = {}, HOSTS = ['cdn.jsdelivr.net', 'cdn.jsdelivr.net', 'fastly.jsdelivr.net', 'cdn.jsdelivr.net', 'gcore.jsdelivr.net'];
+function via(url, attempt) { var h = HOSTS[attempt % HOSTS.length]; return h === 'cdn.jsdelivr.net' ? url : url.replace('//cdn.jsdelivr.net/', '//' + h + '/'); }
+async function piece(url, size) {
+if (kept[url]) { got += kept[url].size; show(); return kept[url]; }
+for (var attempt = 0; ; attempt++) {
+var mine = 0, ac = typeof AbortController !== 'undefined' ? new AbortController() : null, last = Date.now(), dog = null;
+try {
+if (ac) dog = setInterval(function () { if (Date.now() - last > (mine ? 12000 : 20000)) ac.abort(); }, 1000);
+var r = await fetch(via(url, attempt), { cache: attempt ? 'reload' : 'default', signal: ac ? ac.signal : undefined }); if (!r.ok) throw new Error('could not fetch ' + url + ' (' + r.status + ')');
+var blob;
+if (!r.body || !r.body.getReader) { var all = await r.arrayBuffer(); mine = all.byteLength; got += mine; show(); blob = new Blob([all]); }
+else { var reader = r.body.getReader(), chunks = []; for (;;) { var st = await reader.read(); last = Date.now(); if (st.done) break; chunks.push(st.value); mine += st.value.length; got += st.value.length; show(); } blob = new Blob(chunks); }
+if (size && (blob.size < size || blob.size > size + 32)) throw new Error('a piece came back the wrong size');
+return (kept[url] = blob);
+} catch (e) { got -= mine; show(); if (attempt >= 11) throw e; await sleep(Math.min(6000, 800 * Math.pow(2, attempt))); }
+finally { if (dog) clearInterval(dog); }
+}
+}
+function warm(urls) { urls.forEach(function (u) { try { fetch(u, { method: 'HEAD', cache: 'no-store', mode: 'cors' }).catch(function () { }); } catch (e) { } }); }
+async function script(url) {
+for (var attempt = 0; ; attempt++) {
+try { await new Promise(function (ok, no) { var s = document.createElement('script'), t = setTimeout(function () { s.remove(); no(new Error('the loader did not arrive')); }, 25000);
+s.src = via(url, attempt) + (attempt ? '&r=' + attempt : ''); s.onload = function () { clearTimeout(t); ok(); }; s.onerror = function () { clearTimeout(t); s.remove(); no(new Error('the loader did not arrive')); }; document.body.appendChild(s); }); return; }
+catch (e) { if (attempt >= 5) throw e; await sleep(1000 * (attempt + 1)); }
+}
+}
+async function bare(blob, size, s) {
+var h = new Uint8Array(await blob.slice(0, 24).arrayBuffer()), i = 9; if (h[0] !== 0 || h[1] !== 97 || h[2] !== 115 || h[3] !== 109 || h[8] !== 0) throw new Error('a piece arrived changed');
+while (h[i] & 0x80) i++; i++; i += 1 + h[i];
+if (blob.size - i !== size) throw new Error('a piece did not arrive whole');
+if (s === undefined) return blob.slice(i);
+var buf = await blob.slice(i).arrayBuffer(), n = buf.byteLength >> 2, w = new Uint32Array(buf, 0, n), k, x;
+for (k = 0; k <= n; k++) { x = (Math.imul(k, 0x9E3779B1) + s) | 0; x ^= x >>> 15; x = Math.imul(x, 0x85EBCA77); x ^= x >>> 13; x = Math.imul(x, 0xC2B2AE3D); x ^= x >>> 16;
+if (k < n) w[k] ^= x; else { var b = new Uint8Array(buf, n * 4); for (var j = 0; j < b.length; j++) b[j] ^= (x >>> (8 * j)) & 255; } }
+return new Blob([buf]);
+}
+function seedOf(id, i) { return (M.x ^ Math.imul(id.charCodeAt(0), 0x01000193) ^ Math.imul(i + 1, 0x27D4EB2F)) | 0; }
+async function whole(set) { for (var tries = 0; ; tries++) { try { return await wholeOnce(set); } catch (e) { set.parts.forEach(function (n, i) { delete kept[partUrl(set, i)]; }); if (tries >= 3) throw e; await sleep(700 * (tries + 1)); } } }
+async function wholeOnce(set) {
+var blobs = new Array(set.parts.length), next = 0;
+async function worker() { while (next < blobs.length) { var i = next++; blobs[i] = await bare(await piece(partUrl(set, i), set.parts[i]), set.parts[i], typeof M.x === 'number' ? seedOf(set.id, i) : undefined); } }
+await Promise.all([worker(), worker(), worker()]);
+if (set.name === 'data') { setWord('Unpacking'); tube.creep(0.9, 4); }
+var unpacked = await new Response(new Blob(blobs).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+if (unpacked.size !== set.size) throw new Error('a file did not arrive whole');
+if (set.name === 'code') return { buf: await unpacked.arrayBuffer(), type: set.type, size: set.size };
+var out = new Blob([unpacked], { type: set.type }); await out.slice(0, 16).arrayBuffer(); return out;
+}
+function run() { got = 0; return (async function () {
+show(true);
+var all = [G + 'loader.js' + VQ, frameworkUrl]; sets.forEach(function (st) { st.parts.forEach(function (n, i) { all.push(partUrl(st, i)); }); }); warm(all);
+var files = {}, names = {}; for (var i = 0; i < sets.length; i++) files[sets[i].name] = await whole(sets[i]);
+show(true);
+await new Promise(function (ok) { if (window.fnasIntro !== 0) return ok(); var tt = setInterval(function () { if (window.fnasIntro !== 0) { clearInterval(tt); ok(); } }, 50); setTimeout(function () { clearInterval(tt); ok(); }, 10000); });
+setWord('Starting'); tube.set(0.9); tube.creep(0.97, 8);   // (keeps flowing gently while the game starts up)
+var config = { frameworkUrl: frameworkUrl, streamingAssetsUrl: G + 'StreamingAssets', companyName: M.company || 'Midnight Grid Studios', productName: M.product, productVersion: M.version || '1.0',
+devicePixelRatio: Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75), matchWebGLToCanvasSize: true,
+showBanner: function (msg, type) { if (type === 'error') fail(msg); else if (window.console) console.warn(msg); } };
+var real = window.fetch.bind(window); names = { 'g/whole.data': files.data, 'g/whole.wasm': files.code };
+window.fetch = function (input, init) {
+var u = typeof input === 'string' ? input : input && input.url ? input.url : String(input);
+for (var k in names) if (u.length >= k.length && u.substr(u.length - k.length) === k) { var f = names[k]; return Promise.resolve(new Response(f.buf ? f.buf.slice(0) : f, { status: 200, headers: { 'Content-Type': f.type, 'Content-Length': String(f.size) } })); }
+return real(input, init);
+};
+config.dataUrl = 'g/whole.data'; config.codeUrl = 'g/whole.wasm';
+if (typeof createUnityInstance === 'undefined') await script(G + 'loader.js' + VQ);
+var instance = await createUnityInstance(canvas, config, function (p) { tube.set(0.9 + 0.07 * p); });
+window.unityInstance = instance; try { window.name = ''; } catch (e) { }
+kept = {}; names = {}; files = null; done();
+})().catch(function (err) {
+if (window.console) console.error(err); kept = {};
+var n = parseInt((/ddTry(\d)/.exec(window.name || '') || [0, '0'])[1], 10);
+if (n < 2) { try { window.name = 'ddTry' + (n + 1); setWord('One moment'); setTimeout(function () { location.reload(); }, 600); return; } catch (e) { } }
+try { window.name = ''; } catch (e) { }
+fail('The game could not start this time. Tap TRY AGAIN and it will start fresh.');
+}); }
+run();
 })();
 </script>
 </body>

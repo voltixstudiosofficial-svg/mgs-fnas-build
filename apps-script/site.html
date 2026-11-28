@@ -607,7 +607,7 @@
       
       var f = document.createElement('iframe'), held = document.getElementById('fnas-game-src'), html = null;
       try { html = held ? JSON.parse(held.textContent) : null; } catch (e) { html = null; }
-      if (html) f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '"><script>window.__fnasUrl = ' + JSON.stringify('https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/') + ';<\/script>'); else f.src = src;
+      if (html) f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '"><script>(function(){var O=window.AudioContext||window.webkitAudioContext;if(!O)return;var L=[];var P=class extends O{constructor(a){super(a);L.push(this)}};window.AudioContext=P;window.webkitAudioContext=P;function u(){L.forEach(function(c){if(c.state!==\'running\'){try{c.resume()}catch(e){}}})}[\'pointerdown\',\'pointerup\',\'touchstart\',\'touchend\',\'mousedown\',\'keydown\',\'click\'].forEach(function(t){window.addEventListener(t,u,true)});setInterval(u,1000)})();<\/script><script>window.__fnasUrl = ' + JSON.stringify('https://midnight-grid-studios-site.vercel.app/games/five-nights-at-seths/') + ';<\/script>'); else f.src = src;
       f.title = "Five Nights at Seth's"; f.allow = 'fullscreen; autoplay; gamepad'; f.setAttribute('allowfullscreen', '');
       ui.remove(); player.appendChild(f); try { f.focus(); } catch (e) { }
       fnasFrame = f;
@@ -655,7 +655,7 @@
       var f = document.createElement('iframe'), held = document.getElementById('dd-game-src'), html = null;
       try { html = held ? JSON.parse(held.textContent) : null; } catch (e) { html = null; }
       if (!html) { go = false; return; }
-      f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '">');
+      f.srcdoc = html.replace(/<head>/i, '<head><base href="' + esc(location.href) + '"><script>(function(){var O=window.AudioContext||window.webkitAudioContext;if(!O)return;var L=[];var P=class extends O{constructor(a){super(a);L.push(this)}};window.AudioContext=P;window.webkitAudioContext=P;function u(){L.forEach(function(c){if(c.state!==\'running\'){try{c.resume()}catch(e){}}})}[\'pointerdown\',\'pointerup\',\'touchstart\',\'touchend\',\'mousedown\',\'keydown\',\'click\'].forEach(function(t){window.addEventListener(t,u,true)});setInterval(u,1000)})();<\/script>');
       f.title = 'Dirt Dogs'; f.allow = 'fullscreen; autoplay; gamepad; clipboard-write'; f.setAttribute('allowfullscreen', '');
       pui.remove(); pl.appendChild(f); try { f.focus(); } catch (e) { }
       ddFrame = f;
